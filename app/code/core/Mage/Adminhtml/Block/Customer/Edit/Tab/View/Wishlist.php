@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -55,8 +55,10 @@ class Mage_Adminhtml_Block_Customer_Edit_Tab_View_Wishlist extends Mage_Adminhtm
      */
     protected function _prepareCollection()
     {
-        $collection = Mage::getModel('wishlist/item')->getCollection()
-            ->addCustomerIdFilter(Mage::registry('current_customer')->getId())
+        $wishlist = Mage::getModel('wishlist/wishlist');
+        $collection = $wishlist->loadByCustomer(Mage::registry('current_customer'))
+            ->setSharedStoreIds($wishlist->getSharedStoreIds(false))
+            ->getItemCollection()
             ->addDaysInWishlist(true)
             ->addStoreData()
             ->setInStockFilter(true);

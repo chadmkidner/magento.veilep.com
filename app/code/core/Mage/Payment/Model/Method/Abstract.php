@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Payment
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -297,8 +297,7 @@ abstract class Mage_Payment_Model_Method_Abstract extends Varien_Object
      */
     public function canManageRecurringProfiles()
     {
-        return $this->_canManageRecurringProfiles
-               && ($this instanceof Mage_Payment_Model_Recurring_Profile_MethodInterface);
+        return $this->_canManageRecurringProfiles && ($this instanceof Mage_Payment_Model_Recurring_Profile_MethodInterface);
     }
 
     /**
@@ -319,7 +318,7 @@ abstract class Mage_Payment_Model_Method_Abstract extends Varien_Object
     public function getCode()
     {
         if (empty($this->_code)) {
-            Mage::throwException(Mage::helper('payment')->__('Cannot retrieve the payment method code.'));
+            Mage::throwException($this->_getHelper()->__('Cannot retrieve the payment method code.'));
         }
         return $this->_code;
     }
@@ -353,7 +352,7 @@ abstract class Mage_Payment_Model_Method_Abstract extends Varien_Object
     {
         $instance = $this->getData('info_instance');
         if (!($instance instanceof Mage_Payment_Model_Info)) {
-            Mage::throwException(Mage::helper('payment')->__('Cannot retrieve the payment information object instance.'));
+            Mage::throwException($this->_getHelper()->__('Cannot retrieve the payment information object instance.'));
         }
         return $instance;
     }
@@ -361,12 +360,13 @@ abstract class Mage_Payment_Model_Method_Abstract extends Varien_Object
     /**
      * Validate payment method information object
      *
-     * @return Mage_Payment_Model_Abstract
+     * @param   Varien_Object $info
+     * @return  Mage_Payment_Model_Abstract
      */
     public function validate()
     {
          /**
-          * to validate payment method is allowed for billing country or not
+          * to validate paymene method is allowed for billing country or not
           */
          $paymentInfo = $this->getInfoInstance();
          if ($paymentInfo instanceof Mage_Sales_Model_Order_Payment) {
@@ -375,55 +375,51 @@ abstract class Mage_Payment_Model_Method_Abstract extends Varien_Object
              $billingCountry = $paymentInfo->getQuote()->getBillingAddress()->getCountryId();
          }
          if (!$this->canUseForCountry($billingCountry)) {
-             Mage::throwException(Mage::helper('payment')->__('Selected payment type is not allowed for billing country.'));
+             Mage::throwException($this->_getHelper()->__('Selected payment type is not allowed for billing country.'));
          }
          return $this;
     }
 
     /**
-     * Order payment abstract method
+     * Order
      *
-     * @param Varien_Object $payment
-     * @param float $amount
-     *
-     * @return Mage_Payment_Model_Abstract
+     * @param   Varien_Object $orderPayment
+     * @return  Mage_Payment_Model_Abstract
      */
     public function order(Varien_Object $payment, $amount)
     {
         if (!$this->canOrder()) {
-            Mage::throwException(Mage::helper('payment')->__('Order action is not available.'));
+            Mage::throwException($this->_getHelper()->__('Order action is not available.'));
         }
         return $this;
     }
 
     /**
-     * Authorize payment abstract method
+     * Authorize
      *
-     * @param Varien_Object $payment
+     * @param   Varien_Object $orderPayment
      * @param float $amount
-     *
-     * @return Mage_Payment_Model_Abstract
+     * @return  Mage_Payment_Model_Abstract
      */
     public function authorize(Varien_Object $payment, $amount)
     {
         if (!$this->canAuthorize()) {
-            Mage::throwException(Mage::helper('payment')->__('Authorize action is not available.'));
+            Mage::throwException($this->_getHelper()->__('Authorize action is not available.'));
         }
         return $this;
     }
 
     /**
-     * Capture payment abstract method
+     * Capture payment
      *
-     * @param Varien_Object $payment
+     * @param   Varien_Object $orderPayment
      * @param float $amount
-     *
-     * @return Mage_Payment_Model_Abstract
+     * @return  Mage_Payment_Model_Abstract
      */
     public function capture(Varien_Object $payment, $amount)
     {
         if (!$this->canCapture()) {
-            Mage::throwException(Mage::helper('payment')->__('Capture action is not available.'));
+            Mage::throwException($this->_getHelper()->__('Capture action is not available.'));
         }
 
         return $this;
@@ -457,18 +453,18 @@ abstract class Mage_Payment_Model_Method_Abstract extends Varien_Object
     }
 
     /**
-     * Refund specified amount for payment
+     * Refund money
      *
-     * @param Varien_Object $payment
+     * @param   Varien_Object $invoicePayment
      * @param float $amount
-     *
-     * @return Mage_Payment_Model_Abstract
+     * @return  Mage_Payment_Model_Abstract
      */
+    //public function refund(Varien_Object $payment, $amount)
     public function refund(Varien_Object $payment, $amount)
     {
 
         if (!$this->canRefund()) {
-            Mage::throwException(Mage::helper('payment')->__('Refund action is not available.'));
+            Mage::throwException($this->_getHelper()->__('Refund action is not available.'));
         }
 
 
@@ -488,11 +484,10 @@ abstract class Mage_Payment_Model_Method_Abstract extends Varien_Object
     }
 
     /**
-     * Cancel payment abstract method
+     * Cancel payment (GoogleCheckout)
      *
-     * @param Varien_Object $payment
-     *
-     * @return Mage_Payment_Model_Abstract
+     * @param   Varien_Object $invoicePayment
+     * @return  Mage_Payment_Model_Abstract
      */
     public function cancel(Varien_Object $payment)
     {
@@ -514,16 +509,15 @@ abstract class Mage_Payment_Model_Method_Abstract extends Varien_Object
     }
 
     /**
-     * Void payment abstract method
+     * Void payment
      *
-     * @param Varien_Object $payment
-     *
-     * @return Mage_Payment_Model_Abstract
+     * @param   Varien_Object $invoicePayment
+     * @return  Mage_Payment_Model_Abstract
      */
     public function void(Varien_Object $payment)
     {
         if (!$this->canVoid($payment)) {
-            Mage::throwException(Mage::helper('payment')->__('Void action is not available.'));
+            Mage::throwException($this->_getHelper()->__('Void action is not available.'));
         }
         return $this;
     }
@@ -532,7 +526,7 @@ abstract class Mage_Payment_Model_Method_Abstract extends Varien_Object
      * Whether this method can accept or deny payment
      *
      * @param Mage_Payment_Model_Info $payment
-     *
+     * @param bool $soft
      * @return bool
      */
     public function canReviewPayment(Mage_Payment_Model_Info $payment)
@@ -583,10 +577,8 @@ abstract class Mage_Payment_Model_Method_Abstract extends Varien_Object
     /**
      * Retrieve information from payment configuration
      *
-     * @param string $field
-     * @param int|string|null|Mage_Core_Model_Store $storeId
-     *
-     * @return mixed
+     * @param   string $field
+     * @return  mixed
      */
     public function getConfigData($field, $storeId = null)
     {
@@ -626,19 +618,14 @@ abstract class Mage_Payment_Model_Method_Abstract extends Varien_Object
 
     /**
      * Check whether payment method can be used
-     *
      * TODO: payment method instance is not supposed to know about quote
-     *
-     * @param Mage_Sales_Model_Quote|null $quote
-     *
+     * @param Mage_Sales_Model_Quote
      * @return bool
      */
     public function isAvailable($quote = null)
     {
         $checkResult = new StdClass;
-        $isActive = (bool)(int)$this->getConfigData('active', $quote ? $quote->getStoreId() : null);
-        $checkResult->isAvailable = $isActive;
-        $checkResult->isDeniedInConfig = !$isActive; // for future use in observers
+        $checkResult->isAvailable = (bool)(int)$this->getConfigData('active', ($quote ? $quote->getStoreId() : null));
         Mage::dispatchEvent('payment_method_is_active', array(
             'result'          => $checkResult,
             'method_instance' => $this,
@@ -649,7 +636,7 @@ abstract class Mage_Payment_Model_Method_Abstract extends Varien_Object
         if ($checkResult->isAvailable) {
             $implementsRecurring = $this->canManageRecurringProfiles();
             // the $quote->hasRecurringItems() causes big performance impact, thus it has to be called last
-            if ($quote && !$implementsRecurring && $quote->hasRecurringItems()) {
+            if ($quote && (!$implementsRecurring) && $quote->hasRecurringItems()) {
                 $checkResult->isAvailable = false;
             }
         }
@@ -658,12 +645,10 @@ abstract class Mage_Payment_Model_Method_Abstract extends Varien_Object
 
     /**
      * Method that will be executed instead of authorize or capture
-     * if flag isInitializeNeeded set to true
+     * if flag isInitilizeNeeded set to true
      *
-     * @param string $paymentAction
-     * @param object $stateObject
-     *
-     * @return Mage_Payment_Model_Abstract
+     * @param   string $paymentAction
+     * @return  Mage_Payment_Model_Abstract
      */
     public function initialize($paymentAction, $stateObject)
     {
@@ -671,7 +656,7 @@ abstract class Mage_Payment_Model_Method_Abstract extends Varien_Object
     }
 
     /**
-     * Get config payment action url
+     * Get config peyment action url
      * Used to universalize payment actions when processing payment place
      *
      * @return string
@@ -706,7 +691,7 @@ abstract class Mage_Payment_Model_Method_Abstract extends Varien_Object
     }
 
     /**
-     * Used to call debug method from not Payment Method context
+     * Used to call debug method from not Paymant Method context
      *
      * @param mixed $debugData
      */

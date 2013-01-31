@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Sales
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -181,23 +181,20 @@ class Mage_Sales_Model_Resource_Quote extends Mage_Sales_Model_Resource_Abstract
      */
     public function markQuotesRecollectOnCatalogRules()
     {
-        $tableQuote = $this->getTable('sales/quote');
-        $subSelect = $this->_getReadAdapter()
-            ->select()
-            ->from(array('t2' => $this->getTable('sales/quote_item')), array('entity_id' => 'quote_id'))
-            ->from(array('t3' => $this->getTable('catalogrule/rule_product_price')), array())
-            ->where('t2.product_id = t3.product_id')
-            ->group('quote_id');
+        $readAdapter     = $this->_getReadAdapter();
+        $selectProductId = $readAdapter->select()
+            ->from($this->getTable('catalogrule/rule_product_price'), 'product_id')
+            ->distinct();
 
-        $select = $this->_getReadAdapter()->select()->join(
-            array('t2' => $subSelect),
-            't1.entity_id = t2.entity_id',
-            array('trigger_recollect' => new Zend_Db_Expr('1'))
-        );
+        $selectQuoteId = $readAdapter->select()
+            ->from($this->getTable('sales/quote_item'), 'quote_id')
+            ->where('product_id IN(?)', $selectProductId)
+            ->distinct();
 
-        $updateQuery = $select->crossUpdateFromSelect(array('t1' => $tableQuote));
+        $data  = array('trigger_recollect' => 1);
+        $where = array('entity_id IN(?)' => $selectQuoteId);
 
-        $this->_getWriteAdapter()->query($updateQuery);
+        $this->_getWriteAdapter()->update($this->getTable('sales/quote'), $data, $where);
 
         return $this;
     }
@@ -242,26 +239,19 @@ class Mage_Sales_Model_Resource_Quote extends Mage_Sales_Model_Resource_Abstract
     /**
      * Mark recollect contain product(s) quotes
      *
-     * @param array|int|Zend_Db_Expr $productIds
+     * @param array|int $productIds
      * @return Mage_Sales_Model_Resource_Quote
      */
     public function markQuotesRecollect($productIds)
     {
-        $tableQuote = $this->getTable('sales/quote');
-        $tableItem = $this->getTable('sales/quote_item');
-        $subSelect = $this->_getReadAdapter()
-            ->select()
-            ->from($tableItem, array('entity_id' => 'quote_id'))
-            ->where('product_id IN ( ? )', $productIds)
-            ->group('quote_id');
+        $select = $this->_getReadAdapter()->select()
+            ->from($this->getTable('sales/quote_item'), 'quote_id')
+            ->where('product_id IN(?)', $productIds)
+            ->distinct(true);
 
-        $select = $this->_getReadAdapter()->select()->join(
-            array('t2' => $subSelect),
-            't1.entity_id = t2.entity_id',
-            array('trigger_recollect' => new Zend_Db_Expr('1'))
-        );
-        $updateQuery = $select->crossUpdateFromSelect(array('t1' => $tableQuote));
-        $this->_getWriteAdapter()->query($updateQuery);
+        $data  = array('trigger_recollect' => 1);
+        $where = array('entity_id IN(?)' => $select);
+        $this->_getWriteAdapter()->update($this->getTable('sales/quote'), $data, $where);
 
         return $this;
     }

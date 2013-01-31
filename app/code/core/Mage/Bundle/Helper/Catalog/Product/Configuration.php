@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Bundle
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -57,17 +57,12 @@ class Mage_Bundle_Helper_Catalog_Product_Configuration extends Mage_Core_Helper_
      * @param Mage_Catalog_Model_Product $selectionProduct
      * @return decimal
      */
-    public function getSelectionFinalPrice(Mage_Catalog_Model_Product_Configuration_Item_Interface $item,
-        $selectionProduct)
+    public function getSelectionFinalPrice(Mage_Catalog_Model_Product_Configuration_Item_Interface $item, $selectionProduct)
     {
-        $selectionProduct->unsetData('final_price');
-        return $item->getProduct()->getPriceModel()->getSelectionFinalTotalPrice(
-            $item->getProduct(),
-            $selectionProduct,
+        return $item->getProduct()->getPriceModel()->getSelectionFinalPrice(
+            $item->getProduct(), $selectionProduct,
             $item->getQty() * 1,
-            $this->getSelectionQty($item->getProduct(), $selectionProduct->getSelectionId()),
-            false,
-            true
+            $this->getSelectionQty($item->getProduct(), $selectionProduct->getSelectionId())
         );
     }
 
@@ -91,7 +86,7 @@ class Mage_Bundle_Helper_Catalog_Product_Configuration extends Mage_Core_Helper_
 
         // get bundle options
         $optionsQuoteItemOption = $item->getOptionByCode('bundle_option_ids');
-        $bundleOptionsIds = $optionsQuoteItemOption ? unserialize($optionsQuoteItemOption->getValue()) : array();
+        $bundleOptionsIds = unserialize($optionsQuoteItemOption->getValue());
         if ($bundleOptionsIds) {
             /**
             * @var Mage_Bundle_Model_Mysql4_Option_Collection
@@ -120,9 +115,7 @@ class Mage_Bundle_Helper_Catalog_Product_Configuration extends Mage_Core_Helper_
                         $qty = $this->getSelectionQty($product, $bundleSelection->getSelectionId()) * 1;
                         if ($qty) {
                             $option['value'][] = $qty . ' x ' . $this->escapeHtml($bundleSelection->getName())
-                                . ' ' . Mage::helper('core')->currency(
-                                    $this->getSelectionFinalPrice($item, $bundleSelection)
-                                );
+                                . ' ' . Mage::helper('core')->currency($this->getSelectionFinalPrice($item, $bundleSelection));
                         }
                     }
 

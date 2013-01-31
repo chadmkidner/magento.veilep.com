@@ -20,40 +20,16 @@
  *
  * @category    Mage
  * @package     Mage_Shipping
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
 abstract class Mage_Shipping_Model_Carrier_Abstract extends Varien_Object
 {
-    /**
-     * Carrier's code
-     *
-     * @var string
-     */
     protected $_code;
-
-    /**
-     * Rates result
-     *
-     * @var array
-     */
     protected $_rates = null;
-
-    /**
-     * Number of boxes in package
-     *
-     * @var int
-     */
     protected $_numBoxes = 1;
-
-    /**
-     * Free Method config path
-     *
-     * @var string
-     */
-    protected $_freeMethod = 'free_method';
 
     /**
      * Whether this carrier has fixed rates calculation
@@ -340,7 +316,7 @@ abstract class Mage_Shipping_Model_Carrier_Abstract extends Varien_Object
             return;
         }
 
-        $freeMethod = $this->getConfigData($this->_freeMethod);
+        $freeMethod = $this->getConfigData('free_method');
         if (!$freeMethod) {
             return;
         }
@@ -402,9 +378,9 @@ abstract class Mage_Shipping_Model_Carrier_Abstract extends Varien_Object
      */
     public function getMethodPrice($cost, $method='')
     {
-        if ($method == $this->getConfigData($this->_freeMethod) && $this->getConfigData('free_shipping_enable')
-            && $this->getConfigData('free_shipping_subtotal') <= $this->_rawRequest->getBaseSubtotalInclTax()
-        ) {
+        if ($method == $this->getConfigData('free_method') && $this->getConfigData('free_shipping_enable')
+            && $this->getConfigData('free_shipping_subtotal') <= $this->_rawRequest->getValueWithDiscount()
+        ){
             $price = '0.00';
         } else {
             $price = $this->getFinalPriceWithHandlingFee($cost);
@@ -415,12 +391,12 @@ abstract class Mage_Shipping_Model_Carrier_Abstract extends Varien_Object
     /**
      * get the handling fee for the shipping + cost
      *
-     * @param float $cost
-     * @return float final price for shipping method
+     * @return final price for shipping emthod
      */
     public function getFinalPriceWithHandlingFee($cost)
     {
         $handlingFee = $this->getConfigData('handling_fee');
+        $finalMethodPrice = 0;
         $handlingType = $this->getConfigData('handling_type');
         if (!$handlingType) {
             $handlingType = self::HANDLING_TYPE_FIXED;
@@ -430,43 +406,22 @@ abstract class Mage_Shipping_Model_Carrier_Abstract extends Varien_Object
             $handlingAction = self::HANDLING_ACTION_PERORDER;
         }
 
-        return ($handlingAction == self::HANDLING_ACTION_PERPACKAGE)
-            ? $this->_getPerpackagePrice($cost, $handlingType, $handlingFee)
-            : $this->_getPerorderPrice($cost, $handlingType, $handlingFee);
-    }
+        if($handlingAction == self::HANDLING_ACTION_PERPACKAGE)
+        {
+            if ($handlingType == self::HANDLING_TYPE_PERCENT) {
+                $finalMethodPrice = ($cost + ($cost * $handlingFee/100)) * $this->_numBoxes;
+            } else {
+                $finalMethodPrice = ($cost + $handlingFee) * $this->_numBoxes;
+            }
+        } else {
+            if ($handlingType == self::HANDLING_TYPE_PERCENT) {
+                $finalMethodPrice = ($cost * $this->_numBoxes) + ($cost * $this->_numBoxes * $handlingFee / 100);
+            } else {
+                $finalMethodPrice = ($cost * $this->_numBoxes) + $handlingFee;
+            }
 
-    /**
-     * Get final price for shipping method with handling fee per package
-     *
-     * @param float $cost
-     * @param string $handlingType
-     * @param float $handlingFee
-     * @return float
-     */
-    protected function _getPerpackagePrice($cost, $handlingType, $handlingFee)
-    {
-        if ($handlingType == self::HANDLING_TYPE_PERCENT) {
-            return ($cost + ($cost * $handlingFee/100)) * $this->_numBoxes;
         }
-
-        return ($cost + $handlingFee) * $this->_numBoxes;
-    }
-
-    /**
-     * Get final price for shipping method with handling fee per order
-     *
-     * @param float $cost
-     * @param string $handlingType
-     * @param float $handlingFee
-     * @return float
-     */
-    protected function _getPerorderPrice($cost, $handlingType, $handlingFee)
-    {
-        if ($handlingType == self::HANDLING_TYPE_PERCENT) {
-            return ($cost * $this->_numBoxes) + ($cost * $this->_numBoxes * $handlingFee / 100);
-        }
-
-        return ($cost * $this->_numBoxes) + $handlingFee;
+        return $finalMethodPrice;
     }
 
     /**
@@ -521,12 +476,11 @@ abstract class Mage_Shipping_Model_Carrier_Abstract extends Varien_Object
     }
 
     /**
-     * Determine whether zip-code is required for the country of destination
+     * Check if zip code option required
      *
-     * @param string|null $countryId
-     * @return bool
+     * @return boolean
      */
-    public function isZipCodeRequired($countryId = null)
+    public function isZipCodeRequired()
     {
         return false;
     }
@@ -556,7 +510,7 @@ abstract class Mage_Shipping_Model_Carrier_Abstract extends Varien_Object
     }
 
     /**
-     * Used to call debug method from not Payment Method context
+     * Used to call debug method from not Paymant Method context
      *
      * @param mixed $debugData
      */

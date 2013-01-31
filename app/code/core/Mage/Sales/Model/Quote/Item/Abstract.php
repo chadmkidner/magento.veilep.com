@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Sales
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -308,9 +308,8 @@ abstract class Mage_Sales_Model_Quote_Item_Abstract extends Mage_Core_Model_Abst
     public function calcRowTotal()
     {
         $qty        = $this->getTotalQty();
-        // Round unit price before multiplying to prevent losing 1 cent on subtotal
-        $total      = $this->getStore()->roundPrice($this->getCalculationPriceOriginal()) * $qty;
-        $baseTotal  = $this->getBaseCalculationPriceOriginal() * $qty;
+        $total      = $this->getCalculationPriceOriginal()*$qty;
+        $baseTotal  = $this->getBaseCalculationPriceOriginal()*$qty;
 
         $this->setRowTotal($this->getStore()->roundPrice($total));
         $this->setBaseRowTotal($this->getStore()->roundPrice($baseTotal));
@@ -558,6 +557,7 @@ abstract class Mage_Sales_Model_Quote_Item_Abstract extends Mage_Core_Model_Abst
         }
         return false;
     }
+
 
     /**
      * Checking can we ship product separatelly (each child separately)

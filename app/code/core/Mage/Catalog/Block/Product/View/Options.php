@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Catalog
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -135,29 +135,6 @@ class Mage_Catalog_Block_Product_View_Options extends Mage_Core_Block_Template
         return false;
     }
 
-    /**
-     * Get price configuration
-     *
-     * @param Mage_Catalog_Model_Product_Option_Value|Mage_Catalog_Model_Product_Option $option
-     * @return array
-     */
-    protected function _getPriceConfiguration($option)
-    {
-        $data = array();
-        $data['price']      = Mage::helper('core')->currency($option->getPrice(true), false, false);
-        $data['oldPrice']   = Mage::helper('core')->currency($option->getPrice(false), false, false);
-        $data['priceValue'] = $option->getPrice(false);
-        $data['type']       = $option->getPriceType();
-        $data['excludeTax'] = $price = Mage::helper('tax')->getPrice($option->getProduct(), $data['price'], false);
-        $data['includeTax'] = $price = Mage::helper('tax')->getPrice($option->getProduct(), $data['price'], true);
-        return $data;
-    }
-
-    /**
-     * Get json representation of
-     *
-     * @return string
-     */
     public function getJsonConfig()
     {
         $config = array();
@@ -169,12 +146,11 @@ class Mage_Catalog_Block_Product_View_Options extends Mage_Core_Block_Template
                 $_tmpPriceValues = array();
                 foreach ($option->getValues() as $value) {
                     /* @var $value Mage_Catalog_Model_Product_Option_Value */
-                    $id = $value->getId();
-                    $_tmpPriceValues[$id] = $this->_getPriceConfiguration($value);
+                   $_tmpPriceValues[$value->getId()] = Mage::helper('core')->currency($value->getPrice(true), false, false);
                 }
                 $priceValue = $_tmpPriceValues;
             } else {
-                $priceValue = $this->_getPriceConfiguration($option);
+                $priceValue = Mage::helper('core')->currency($option->getPrice(true), false, false);
             }
             $config[$option->getId()] = $priceValue;
         }

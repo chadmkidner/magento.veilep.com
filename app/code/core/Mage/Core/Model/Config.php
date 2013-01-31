@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Core
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -593,8 +593,8 @@ class Mage_Core_Model_Config extends Mage_Core_Model_Config_Base
         if (!isset($this->_cacheSections[$section])) {
             return false;
         }
-        $sectionPath = array_slice($path, 0, $this->_cacheSections[$section]+1);
-        $sectionKey = implode('_', $sectionPath);
+        $sectioPath = array_slice($path, 0, $this->_cacheSections[$section]+1);
+        $sectionKey = implode('_', $sectioPath);
 
         if (!isset($this->_cacheLoadedSections[$sectionKey])) {
             Varien_Profiler::start('init_config_section:' . $sectionKey);
@@ -618,7 +618,7 @@ class Mage_Core_Model_Config extends Mage_Core_Model_Config_Base
     {
         $section    = $path[0];
         $config     = $this->_getSectionConfig($path);
-        $path       = array_slice($path, $this->_cacheSections[$section] + 1);
+        $path       = array_slice($path, $this->_cacheSections[$section]+1);
         if ($config) {
             return $config->descend($path);
         }
@@ -630,7 +630,7 @@ class Mage_Core_Model_Config extends Mage_Core_Model_Config_Base
      *
      * @param   string $path
      * @param   string $scope
-     * @param   string|int $scopeCode
+     * @param   string $scopeCode
      * @return Mage_Core_Model_Config_Element
      */
     public function getNode($path=null, $scope='', $scopeCode=null)
@@ -870,7 +870,9 @@ class Mage_Core_Model_Config extends Mage_Core_Model_Config_Base
             foreach ($moduleProp['depends'] as $dependModule => $true) {
                 if (!isset($definedModules[$dependModule])) {
                     Mage::throwException(
-                        Mage::helper('core')->__('Module "%1$s" cannot depend on "%2$s".', $moduleProp['module'], $dependModule)
+                        Mage::helper('core')->__(
+                            'Module "%1$s" cannot depend on "%2$s".', $moduleProp['module'], $dependModule
+                        )
                     );
                 }
             }
@@ -1338,7 +1340,7 @@ class Mage_Core_Model_Config extends Mage_Core_Model_Config_Base
      *
      * @param string $modelClass
      * @param array|object $constructArguments
-     * @return Mage_Core_Model_Abstract|false
+     * @return Mage_Core_Model_Abstract
      */
     public function getModelInstance($modelClass='', $constructArguments=array())
     {
@@ -1349,6 +1351,10 @@ class Mage_Core_Model_Config extends Mage_Core_Model_Config_Base
             Varien_Profiler::stop('CORE::create_object_of::'.$className);
             return $obj;
         } else {
+            /* throw Mage::exception(
+                'Mage_Core',
+                Mage::helper('core')->__('Model class does not exist: %s.', $modelClass)
+            ); */
             return false;
         }
     }
@@ -1468,23 +1474,18 @@ class Mage_Core_Model_Config extends Mage_Core_Model_Config_Base
     }
 
     /**
-     * Check whether given path should be secure according to configuration security requirements for URL
-     * "Secure" should not be confused with https protocol, it is about web/secure/*_url settings usage only
+     * Check security requirements for url
      *
      * @param string $url
      * @return bool
      */
     public function shouldUrlBeSecure($url)
     {
-        if (!Mage::getStoreConfigFlag(Mage_Core_Model_Store::XML_PATH_SECURE_IN_FRONTEND)) {
-            return false;
-        }
-
         if (!isset($this->_secureUrlCache[$url])) {
             $this->_secureUrlCache[$url] = false;
             $secureUrls = $this->getNode('frontend/secure_url');
             foreach ($secureUrls->children() as $match) {
-                if (strpos($url, (string)$match) === 0) {
+                if (strpos($url, (string)$match)===0) {
                     $this->_secureUrlCache[$url] = true;
                     break;
                 }

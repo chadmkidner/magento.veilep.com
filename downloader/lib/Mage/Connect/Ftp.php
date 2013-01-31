@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Connect
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -33,18 +33,22 @@
  */
 class Mage_Connect_Ftp
 {
+
     /**
      * Connection object
-     *
      * @var resource
      */
     protected $_conn = false;
 
+    public function __construct()
+    {
+
+    }
+
     /**
      * Check connected, throw exception if not
-     *
      * @throws Exception
-     * @return null
+     * @return void
      */
     protected function checkConnected()
     {
@@ -55,9 +59,8 @@ class Mage_Connect_Ftp
 
     /**
      * ftp_mkdir wrapper
-     *
-     * @param string $name
-     * @return string
+     * @param stin$name
+     * @return unknown_type
      */
     public function mdkir($name)
     {
@@ -65,9 +68,10 @@ class Mage_Connect_Ftp
         return @ftp_mkdir($this->_conn, $name);
     }
 
+
+
     /**
      * Make dir recursive
-     *
      * @param string $path
      * @param int $mode
      */
@@ -92,13 +96,13 @@ class Mage_Connect_Ftp
         return $ret;
     }
 
+
     /**
      * Try to login to server
-     *
      * @param string $login
      * @param string $password
      * @throws Exception on invalid login credentials
-     * @return boolean
+     * @return bool
      */
     public function login($login = "anonymous", $password = "test@gmail.com")
     {
@@ -112,7 +116,6 @@ class Mage_Connect_Ftp
 
     /**
      * Validate connection string
-     *
      * @param string $string
      * @throws Exception
      * @return string
@@ -136,10 +139,10 @@ class Mage_Connect_Ftp
      * Connect to server using connect string
      * Connection string: ftp://user:pass@server:port/path
      * user,pass,port,path are optional parts
-     *
      * @param string $string
-     * @param int $timeout
-     * @return null
+     *
+     * @param $timeout
+     * @return unknown_type
      */
     public function connect($string, $timeout = 90)
     {
@@ -166,13 +169,13 @@ class Mage_Connect_Ftp
 
     /**
      * ftp_fput wrapper
-     *
      * @param string $remoteFile
      * @param resource $handle
      * @param int $mode  FTP_BINARY | FTP_ASCII
      * @param int $startPos
-     * @return boolean
+     * @return bool
      */
+
     public function fput($remoteFile, $handle, $mode = FTP_BINARY, $startPos = 0)
     {
         $this->checkConnected();
@@ -181,12 +184,11 @@ class Mage_Connect_Ftp
 
     /**
      * ftp_put wrapper
-     *
      * @param string $remoteFile
      * @param string $localFile
      * @param int $mode FTP_BINARY | FTP_ASCII
      * @param int $startPos
-     * @return boolean
+     * @return bool
      */
     public function put($remoteFile, $localFile, $mode = FTP_BINARY, $startPos = 0)
     {
@@ -194,10 +196,10 @@ class Mage_Connect_Ftp
         return @ftp_put($this->_conn, $remoteFile, $localFile, $mode, $startPos);
     }
 
+
     /**
      * Get current working directory
-     *
-     * @return string
+     * @return mixed
      */
     public function getcwd()
     {
@@ -218,9 +220,8 @@ class Mage_Connect_Ftp
 
     /**
      * ftp_raw wrapper
-     *
      * @param string $cmd
-     * @return array
+     * @return mixed
      */
     public function raw($cmd)
     {
@@ -228,16 +229,18 @@ class Mage_Connect_Ftp
         return @ftp_raw($this->_conn, $cmd);
     }
 
+
     /**
-     * Upload local file to remote server.
+     * Upload local file to remote
+     *
      * Can be used for relative and absoulte remote paths
      * Relative: use chdir before calling this
      *
-     * @param string $remote
+     * @param srting $remote
      * @param string $local
      * @param int $dirMode
      * @param int $fileMode
-     * @return boolean
+     * @return bool
      */
     public function upload($remote, $local, $dirMode = 0777, $fileMode=0)
     {
@@ -279,16 +282,15 @@ class Mage_Connect_Ftp
         if($fileMode){
             $res=$this->chmod($fileMode, $remote);
         }
-        return (boolean)$res;
+        return (bool)$res;
     }
 
     /**
      * Download remote file to local machine
-     *
      * @param string $remote
      * @param string $local
      * @param int $ftpMode  FTP_BINARY|FTP_ASCII
-     * @return boolean
+     * @return bool
      */
     public function download($remote, $local, $ftpMode = FTP_BINARY)
     {
@@ -296,22 +298,21 @@ class Mage_Connect_Ftp
         return $this->get($local, $remote, $ftpMode);
     }
 
+
     /**
      * ftp_pasv wrapper
-     *
-     * @param boolean $pasv
-     * @return boolean
+     * @param bool $pasv
+     * @return bool
      */
     public function pasv($pasv)
     {
         $this->checkConnected();
-        return @ftp_pasv($this->_conn, (boolean) $pasv);
+        return @ftp_pasv($this->_conn, (bool) $pasv);
     }
 
     /**
      * Close FTP connection
-     *
-     * @return null
+     * @return void
      */
     public function close()
     {
@@ -322,10 +323,9 @@ class Mage_Connect_Ftp
 
     /**
      * ftp_chmod wrapper
-     *
      * @param $mode
      * @param $remoteFile
-     * @return boolean
+     * @return bool
      */
     public function chmod($mode, $remoteFile)
     {
@@ -335,9 +335,8 @@ class Mage_Connect_Ftp
 
     /**
      * ftp_chdir wrapper
-     *
      * @param string $dir
-     * @return boolean
+     * @return bool
      */
     public function chdir($dir)
     {
@@ -347,8 +346,7 @@ class Mage_Connect_Ftp
 
     /**
      * ftp_cdup wrapper
-     *
-     * @return boolean
+     * @return bool
      */
     public function cdup()
     {
@@ -358,12 +356,11 @@ class Mage_Connect_Ftp
 
     /**
      * ftp_get wrapper
-     *
      * @param string $localFile
      * @param string $remoteFile
      * @param int $fileMode         FTP_BINARY | FTP_ASCII
      * @param int $resumeOffset
-     * @return boolean
+     * @return bool
      */
     public function get($localFile, $remoteFile, $fileMode = FTP_BINARY, $resumeOffset = 0)
     {
@@ -374,9 +371,8 @@ class Mage_Connect_Ftp
 
     /**
      * ftp_nlist wrapper
-     *
      * @param string $dir
-     * @return boolean
+     * @return bool
      */
     public function nlist($dir = "/")
     {
@@ -387,10 +383,9 @@ class Mage_Connect_Ftp
 
     /**
      * ftp_rawlist wrapper
-     *
      * @param string $dir
-     * @param boolean $recursive
-     * @return array
+     * @param bool $recursive
+     * @return mixed
      */
     public function rawlist( $dir = "/", $recursive = false )
     {
@@ -399,9 +394,9 @@ class Mage_Connect_Ftp
         return @ftp_rawlist($this->_conn, $dir, $recursive);
     }
 
+
     /**
      * Convert byte count to float KB/MB format
-     *
      * @param int $bytes
      * @return string
      */
@@ -414,7 +409,6 @@ class Mage_Connect_Ftp
 
     /**
      * Chmod string "-rwxrwxrwx" to "777" converter
-     *
      * @param string $chmod
      * @return string
      */
@@ -430,8 +424,8 @@ class Mage_Connect_Ftp
      * Checks file exists
      *
      * @param string $path
-     * @param boolean $excludeIfIsDir
-     * @return boolean
+     * @param bool $excludeIfIsDir
+     * @return bool
      */
     public function fileExists($path, $excludeIfIsDir = true)
     {
@@ -454,9 +448,8 @@ class Mage_Connect_Ftp
 
     /**
      * Get directory contents in PHP array
-     *
      * @param string $dir
-     * @param boolean $recursive
+     * @param bool $recursive
      * @return array
      */
     public function ls($dir = "/", $recursive = false)
@@ -494,7 +487,6 @@ class Mage_Connect_Ftp
 
     /**
      * Correct file path
-     *
      * @param $str
      * @return string
      */
@@ -507,9 +499,8 @@ class Mage_Connect_Ftp
 
     /**
      * Delete file
-     *
      * @param string $file
-     * @return boolean
+     * @return bool
      */
     public function delete($file)
     {
@@ -520,9 +511,8 @@ class Mage_Connect_Ftp
 
     /**
      * Remove directory
-     *
      * @param string $dir
-     * @return boolean
+     * @return bool
      */
     public function rmdir($dir)
     {

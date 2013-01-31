@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -43,34 +43,19 @@ class Mage_Adminhtml_DashboardController extends Mage_Adminhtml_Controller_Actio
         $this->renderLayout();
     }
 
-    /**
-     * Gets most viewed products list
-     *
-     */
     public function productsViewedAction()
     {
-        $this->loadLayout();
-        $this->renderLayout();
+        $this->getResponse()->setBody($this->getLayout()->createBlock('adminhtml/dashboard_tab_products_viewed')->toHtml());
     }
 
-    /**
-     * Gets latest customers list
-     *
-     */
     public function customersNewestAction()
     {
-        $this->loadLayout();
-        $this->renderLayout();
+        $this->getResponse()->setBody($this->getLayout()->createBlock('adminhtml/dashboard_tab_customers_newest')->toHtml());
     }
 
-    /**
-     * Gets the list of most active customers
-     *
-     */
     public function customersMostAction()
     {
-        $this->loadLayout();
-        $this->renderLayout();
+        $this->getResponse()->setBody($this->getLayout()->createBlock('adminhtml/dashboard_tab_customers_most')->toHtml());
     }
 
     public function ajaxBlockAction()

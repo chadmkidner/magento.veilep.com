@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Catalog
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -149,11 +149,22 @@ class Mage_Catalog_Model_Resource_Eav_Attribute extends Mage_Eav_Model_Entity_At
          * Fix saving attribute in admin
          */
         Mage::getSingleton('eav/config')->clear();
+        return parent::_afterSave();
+    }
+
+    /**
+     * Init indexing process after attribute data commit
+     *
+     * @return Mage_Catalog_Model_Resource_Eav_Attribute
+     */
+    public function afterCommitCallback()
+    {
+        parent::afterCommitCallback();
 
         Mage::getSingleton('index/indexer')->processEntityAction(
             $this, self::ENTITY, Mage_Index_Model_Event::TYPE_SAVE
         );
-        return parent::_afterSave();
+        return $this;
     }
 
     /**
@@ -326,8 +337,7 @@ class Mage_Catalog_Model_Resource_Eav_Attribute extends Mage_Eav_Model_Entity_At
                 }
             }
 
-            self::$_labels = Mage::app()->getTranslator()->getResource()
-                ->getTranslationArrayByStrings($attributeLabels, $storeId);
+            self::$_labels = Mage::app()->getTranslator()->getResource()->getTranslationArrayByStrings($attributeLabels, $storeId);
         }
     }
 

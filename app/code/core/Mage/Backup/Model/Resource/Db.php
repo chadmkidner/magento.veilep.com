@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Backup
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -35,11 +35,11 @@
 class Mage_Backup_Model_Resource_Db
 {
     /**
-     * Database connection adapter
+     * Read connection
      *
      * @var Varien_Db_Adapter_Pdo_Mysql
      */
-    protected $_write;
+    protected $_read;
 
     /**
      * tables Foreign key data array
@@ -55,7 +55,7 @@ class Mage_Backup_Model_Resource_Db
      */
     public function __construct()
     {
-        $this->_write = Mage::getSingleton('core/resource')->getConnection('backup_write');
+        $this->_read = Mage::getSingleton('core/resource')->getConnection('backup_read');
     }
 
     /**
@@ -85,7 +85,7 @@ class Mage_Backup_Model_Resource_Db
      */
     public function getTables()
     {
-        return $this->_write->listTables();
+        return $this->_read->listTables();
     }
 
     /**
@@ -123,10 +123,7 @@ class Mage_Backup_Model_Resource_Db
         if (!$tableName) {
             $tables = $this->getTables();
             foreach($tables as $table) {
-                $tableFkScript = Mage::getResourceHelper('backup')->getTableForeignKeysSql($table);
-                if (!empty($tableFkScript)) {
-                    $fkScript .= "\n" . $tableFkScript;
-                }
+                $fkScript = $fkScript . Mage::getResourceHelper('backup')->getTableForeignKeysSql($table);
             }
         } else {
             $fkScript = $this->getTableForeignKeysSql($tableName);
@@ -142,7 +139,7 @@ class Mage_Backup_Model_Resource_Db
      */
     public function getTableStatus($tableName)
     {
-        $row = $this->_write->showTableStatus($tableName);
+        $row = $this->_read->showTableStatus($tableName);
 
         if ($row) {
             $statusObject = new Varien_Object();
@@ -151,8 +148,8 @@ class Mage_Backup_Model_Resource_Db
                 $statusObject->setData(strtolower($field), $value);
             }
 
-            $cntRow = $this->_write->fetchRow(
-                    $this->_write->select()->from($tableName, 'COUNT(1) as rows'));
+            $cntRow = $this->_read->fetchRow(
+                    $this->_read->select()->from($tableName, 'COUNT(1) as rows'));
             $statusObject->setRows($cntRow['rows']);
 
             return $statusObject;
@@ -164,7 +161,7 @@ class Mage_Backup_Model_Resource_Db
     /**
      * Quote Table Row
      *
-     * @deprecated
+     * @deprecated 
      *
      * @param string $tableName
      * @param array $row
@@ -172,7 +169,7 @@ class Mage_Backup_Model_Resource_Db
      */
     protected function _quoteRow($tableName, array $row)
     {
-        return $row;
+        return $row;    
     }
 
     /**
@@ -185,7 +182,8 @@ class Mage_Backup_Model_Resource_Db
      */
     public function getTableDataSql($tableName, $count = null, $offset = null)
     {
-        return Mage::getResourceHelper('backup')->getPartInsertSql($tableName, $count, $offset);
+        return Mage::getResourceHelper('backup')->getInsertSql($tableName);
+
     }
 
     /**
@@ -208,7 +206,7 @@ class Mage_Backup_Model_Resource_Db
      */
     public function getTableHeader($tableName)
     {
-        $quotedTableName = $this->_write->quoteIdentifier($tableName);
+        $quotedTableName = $this->_read->quoteIdentifier($tableName);
         return "\n--\n"
             . "-- Table structure for table {$quotedTableName}\n"
             . "--\n\n";
@@ -243,7 +241,7 @@ class Mage_Backup_Model_Resource_Db
      */
     public function getFooter()
     {
-        return Mage::getResourceHelper('backup')->getFooter();
+        return Mage::getResourceHelper('backup')->getFooter();        
     }
 
     /**
@@ -276,7 +274,7 @@ class Mage_Backup_Model_Resource_Db
     public function beginTransaction()
     {
         Mage::getResourceHelper('backup')->turnOnSerializableMode();
-        $this->_write->beginTransaction();
+        $this->_read->beginTransaction();
         return $this;
     }
 
@@ -287,7 +285,7 @@ class Mage_Backup_Model_Resource_Db
      */
     public function commitTransaction()
     {
-        $this->_write->commit();
+        $this->_read->commit();
         Mage::getResourceHelper('backup')->turnOnReadCommittedMode();
         return $this;
     }
@@ -299,18 +297,7 @@ class Mage_Backup_Model_Resource_Db
      */
     public function rollBackTransaction()
     {
-        $this->_write->rollBack();
-        return $this;
-    }
-
-    /**
-     * Run sql code
-     *
-     * @param $command
-     * @return Mage_Backup_Model_Resource_Db
-     */
-    public function runCommand($command){
-        $this->_write->query($command);
+        $this->_read->rollBack();
         return $this;
     }
 }

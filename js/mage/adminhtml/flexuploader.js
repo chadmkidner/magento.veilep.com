@@ -19,7 +19,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 
@@ -283,16 +283,16 @@ if(!window.Flex) {
             };
         },
         formatSize: function(size) {
-            if (size > 1024 * 1024 * 1024 * 1024) {
-                return this.round(size / (1024 * 1024 * 1024 * 1024)) + ' ' + this.translate('TB');
-            } else if (size > 1024 * 1024 * 1024) {
-                return this.round(size / (1024 * 1024 * 1024)) + ' ' + this.translate('GB');
-            } else if (size > 1024 * 1024) {
-                return this.round(size / (1024 * 1024)) + ' ' + this.translate('MB');
+            if (size > 1024*1024*1024*1024) {
+                return this.round(size/(1024*1024*1024*1024)) + ' ' + this.translate('Tb');
+            } else if (size > 1024*1024*1024) {
+                return this.round(size/(1024*1024*1024))  + ' ' + this.translate('Gb');
+            } else if (size > 1024*1024) {
+                return this.round(size/(1024*1024))  + ' ' + this.translate('Mb');
             } else if (size > 1024) {
-                return this.round(size / (1024)) + ' ' + this.translate('kB');
+                return this.round(size/(1024))  + ' ' + this.translate('Kb');
             }
-            return size + ' ' + this.translate('B');
+            return size  + ' ' + this.translate('b');
         },
         round: function(number) {
             return Math.round(number*100)/100;

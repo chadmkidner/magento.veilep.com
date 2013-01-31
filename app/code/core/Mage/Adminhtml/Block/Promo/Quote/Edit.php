@@ -20,22 +20,22 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
- * Shopping cart rule edit form block
+ * description
+ *
+ * @category    Mage
+ * @category   Mage
+ * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
 class Mage_Adminhtml_Block_Promo_Quote_Edit extends Mage_Adminhtml_Block_Widget_Form_Container
 {
 
-    /**
-     * Initialize form
-     * Add standard buttons
-     * Add "Save and Continue" button
-     */
     public function __construct()
     {
         $this->_objectId = 'id';
@@ -43,34 +43,41 @@ class Mage_Adminhtml_Block_Promo_Quote_Edit extends Mage_Adminhtml_Block_Widget_
 
         parent::__construct();
 
-        $this->_addButton('save_and_continue_edit', array(
-            'class'   => 'save',
-            'label'   => Mage::helper('salesrule')->__('Save and Continue Edit'),
-            'onclick' => 'editForm.submit($(\'edit_form\').action + \'back/edit/\')',
-        ), 10);
+        $this->_updateButton('save', 'label', Mage::helper('salesrule')->__('Save Rule'));
+        $this->_updateButton('delete', 'label', Mage::helper('salesrule')->__('Delete Rule'));
+
+        $rule = Mage::registry('current_promo_quote_rule');
+
+        if (!$rule->isDeleteable()) {
+            $this->_removeButton('delete');
+        }
+
+        if ($rule->isReadonly()) {
+            $this->_removeButton('save');
+            $this->_removeButton('reset');
+        } else {
+            $this->_addButton('save_and_continue', array(
+                'label'     => Mage::helper('salesrule')->__('Save and Continue Edit'),
+                'onclick'   => 'saveAndContinueEdit()',
+                'class' => 'save'
+            ), 10);
+            $this->_formScripts[] = " function saveAndContinueEdit(){ editForm.submit($('edit_form').action + 'back/edit/') } ";
+        }
+
+        #$this->setTemplate('promo/quote/edit.phtml');
     }
 
-    /**
-     * Getter for form header text
-     *
-     * @return string
-     */
     public function getHeaderText()
     {
         $rule = Mage::registry('current_promo_quote_rule');
         if ($rule->getRuleId()) {
-            return Mage::helper('salesrule')->__("Edit Rule '%s'", $this->escapeHtml($rule->getName()));
+            return Mage::helper('salesrule')->__("Edit Rule '%s'", $this->htmlEscape($rule->getName()));
         }
         else {
             return Mage::helper('salesrule')->__('New Rule');
         }
     }
 
-    /**
-     * Retrieve products JSON
-     *
-     * @return string
-     */
     public function getProductsJson()
     {
         return '{}';

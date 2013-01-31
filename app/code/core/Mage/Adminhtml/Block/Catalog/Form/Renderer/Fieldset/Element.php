@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -31,8 +31,7 @@
  * @package    Mage_Adminhtml
  * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Adminhtml_Block_Catalog_Form_Renderer_Fieldset_Element
-    extends Mage_Adminhtml_Block_Widget_Form_Renderer_Fieldset_Element
+class Mage_Adminhtml_Block_Catalog_Form_Renderer_Fieldset_Element extends Mage_Adminhtml_Block_Widget_Form_Renderer_Fieldset_Element
 {
     /**
      * Initialize block template
@@ -102,9 +101,8 @@ class Mage_Adminhtml_Block_Catalog_Form_Renderer_Fieldset_Element
 
         if (!$this->getDataObject()->getExistsStoreValueFlag($attributeCode)) {
             return true;
-        } else if ($this->getElement()->getValue() == $defaultValue &&
-            $this->getDataObject()->getStoreId() != $this->_getDefaultStoreId()
-        ) {
+        } else if ($this->getElement()->getValue() == $defaultValue && 
+                   $this->getDataObject()->getStoreId() != $this->_getDefaultStoreId()) {
             return false;
         }
         if ($defaultValue === false && !$this->getAttribute()->getIsRequired() && $this->getElement()->getValue()) {
@@ -141,11 +139,13 @@ class Mage_Adminhtml_Block_Catalog_Form_Renderer_Fieldset_Element
             return $html;
         }
         if ($attribute->isScopeGlobal()) {
-            $html .= Mage::helper('adminhtml')->__('[GLOBAL]');
-        } elseif ($attribute->isScopeWebsite()) {
-            $html .= Mage::helper('adminhtml')->__('[WEBSITE]');
-        } elseif ($attribute->isScopeStore()) {
-            $html .= Mage::helper('adminhtml')->__('[STORE VIEW]');
+            $html.= '[GLOBAL]';
+        }
+        elseif ($attribute->isScopeWebsite()) {
+            $html.= '[WEBSITE]';
+        }
+        elseif ($attribute->isScopeStore()) {
+            $html.= '[STORE VIEW]';
         }
 
         return $html;
@@ -158,12 +158,7 @@ class Mage_Adminhtml_Block_Catalog_Form_Renderer_Fieldset_Element
      */
     public function getElementLabelHtml()
     {
-        $element = $this->getElement();
-        $label = $element->getLabel();
-        if (!empty($label)) {
-            $element->setLabel($this->__($label));
-        }
-        return $element->getLabelHtml();
+        return $this->getElement()->getLabelHtml();
     }
 
     /**

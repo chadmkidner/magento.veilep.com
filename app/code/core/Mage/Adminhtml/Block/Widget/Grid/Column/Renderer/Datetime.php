@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -29,11 +29,10 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @author     Magento Core Team <core@magentocommerce.com>
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 
-class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Datetime
-    extends Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Abstract
+class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Datetime extends Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Abstract
 {
     /**
      * Date format string
@@ -56,7 +55,7 @@ class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Datetime
                     );
                 }
                 catch (Exception $e) {
-                    Mage::logException($e);
+
                 }
             }
             $format = self::$_format;
@@ -75,13 +74,11 @@ class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Datetime
         if ($data = $this->_getValue($row)) {
             $format = $this->_getFormat();
             try {
-                $data = Mage::app()->getLocale()
-                    ->date($data, Varien_Date::DATETIME_INTERNAL_FORMAT)->toString($format);
+                $data = Mage::app()->getLocale()->date($data, Varien_Date::DATETIME_INTERNAL_FORMAT)->toString($format);
             }
             catch (Exception $e)
             {
-                $data = Mage::app()->getLocale()
-                    ->date($data, Varien_Date::DATETIME_INTERNAL_FORMAT)->toString($format);
+                $data = Mage::app()->getLocale()->date($data, Varien_Date::DATETIME_INTERNAL_FORMAT)->toString($format);
             }
             return $data;
         }

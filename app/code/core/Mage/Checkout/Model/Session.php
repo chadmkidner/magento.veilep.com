@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Checkout
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -28,20 +28,14 @@
 class Mage_Checkout_Model_Session extends Mage_Core_Model_Session_Abstract
 {
     const CHECKOUT_STATE_BEGIN = 'begin';
-
-    /**
-     * Quote instance
-     *
-     * @var null|Mage_Sales_Model_Quote
-     */
-    protected $_quote;
+    protected $_quote = null;
 
     /**
      * Customer instance
      *
      * @var null|Mage_Customer_Model_Customer
      */
-    protected $_customer;
+    protected $_customer = null;
 
     /**
      * Whether load only active quote
@@ -70,7 +64,7 @@ class Mage_Checkout_Model_Session extends Mage_Core_Model_Session_Abstract
     /**
      * Set customer instance
      *
-     * @param Mage_Customer_Model_Customer|null $customer
+     * @param Mage_Customer_Model_Customer $customer
      * @return Mage_Checkout_Model_Session
      */
     public function setCustomer($customer)
@@ -86,7 +80,7 @@ class Mage_Checkout_Model_Session extends Mage_Core_Model_Session_Abstract
      */
     public function hasQuote()
     {
-        return isset($this->_quote);
+        return !(is_null($this->_quote));
     }
 
     /**
@@ -111,8 +105,10 @@ class Mage_Checkout_Model_Session extends Mage_Core_Model_Session_Abstract
         Mage::dispatchEvent('custom_quote_process', array('checkout_session' => $this));
 
         if ($this->_quote === null) {
+            $quote = Mage::getModel('sales/quote')
+                ->setStoreId(Mage::app()->getStore()->getId());
+
             /** @var $quote Mage_Sales_Model_Quote */
-            $quote = Mage::getModel('sales/quote')->setStoreId(Mage::app()->getStore()->getId());
             if ($this->getQuoteId()) {
                 if ($this->_loadInactive) {
                     $quote->load($this->getQuoteId());

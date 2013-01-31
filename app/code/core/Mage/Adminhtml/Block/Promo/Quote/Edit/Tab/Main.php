@@ -20,16 +20,17 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 /**
- * Shopping Cart Price Rule General Information Tab
+ * description
  *
- * @category Mage
- * @package Mage_Adminhtml
- * @author Magento Core Team <core@magentocommerce.com>
+ * @category    Mage
+ * @category   Mage
+ * @package    Mage_Adminhtml
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Mage_Adminhtml_Block_Promo_Quote_Edit_Tab_Main
     extends Mage_Adminhtml_Block_Widget_Form
@@ -56,7 +57,7 @@ class Mage_Adminhtml_Block_Promo_Quote_Edit_Tab_Main
     }
 
     /**
-     * Returns status flag about this tab can be showed or not
+     * Returns status flag about this tab can be showen or not
      *
      * @return true
      */
@@ -79,12 +80,12 @@ class Mage_Adminhtml_Block_Promo_Quote_Edit_Tab_Main
     {
         $model = Mage::registry('current_promo_quote_rule');
 
+        //$form = new Varien_Data_Form(array('id' => 'edit_form1', 'action' => $this->getData('action'), 'method' => 'post'));
         $form = new Varien_Data_Form();
+
         $form->setHtmlIdPrefix('rule_');
 
-        $fieldset = $form->addFieldset('base_fieldset',
-            array('legend' => Mage::helper('salesrule')->__('General Information'))
-        );
+        $fieldset = $form->addFieldset('base_fieldset', array('legend'=>Mage::helper('salesrule')->__('General Information')));
 
         if ($model->getId()) {
             $fieldset->addField('rule_id', 'hidden', array(
@@ -107,7 +108,7 @@ class Mage_Adminhtml_Block_Promo_Quote_Edit_Tab_Main
             'name' => 'description',
             'label' => Mage::helper('salesrule')->__('Description'),
             'title' => Mage::helper('salesrule')->__('Description'),
-            'style' => 'height: 100px;',
+            'style' => 'width: 98%; height: 100px;',
         ));
 
         $fieldset->addField('is_active', 'select', array(
@@ -120,43 +121,39 @@ class Mage_Adminhtml_Block_Promo_Quote_Edit_Tab_Main
                 '0' => Mage::helper('salesrule')->__('Inactive'),
             ),
         ));
-
         if (!$model->getId()) {
             $model->setData('is_active', '1');
         }
 
-        if (Mage::app()->isSingleStoreMode()) {
-            $websiteId = Mage::app()->getStore(true)->getWebsiteId();
+
+        if (!Mage::app()->isSingleStoreMode()) {
+            $fieldset->addField('website_ids', 'multiselect', array(
+                'name'      => 'website_ids[]',
+                'label'     => Mage::helper('catalogrule')->__('Websites'),
+                'title'     => Mage::helper('catalogrule')->__('Websites'),
+                'required'  => true,
+                'values'    => Mage::getSingleton('adminhtml/system_config_source_website')->toOptionArray(),
+            ));
+        }
+        else {
             $fieldset->addField('website_ids', 'hidden', array(
-                'name'     => 'website_ids[]',
-                'value'    => $websiteId
+                'name'      => 'website_ids[]',
+                'value'     => Mage::app()->getStore(true)->getWebsiteId()
             ));
-            $model->setWebsiteIds($websiteId);
-        } else {
-            $field = $fieldset->addField('website_ids', 'multiselect', array(
-                'name'     => 'website_ids[]',
-                'label'     => Mage::helper('salesrule')->__('Websites'),
-                'title'     => Mage::helper('salesrule')->__('Websites'),
-                'required' => true,
-                'values'   => Mage::getSingleton('adminhtml/system_store')->getWebsiteValuesForForm()
-            ));
-            $renderer = $this->getLayout()->createBlock('adminhtml/store_switcher_form_renderer_fieldset_element');
-            $field->setRenderer($renderer);
+            $model->setWebsiteIds(Mage::app()->getStore(true)->getWebsiteId());
         }
 
-        $customerGroups = Mage::getResourceModel('customer/group_collection')->load()->toOptionArray();
-        $found = false;
+        $customerGroups = Mage::getResourceModel('customer/group_collection')
+            ->load()->toOptionArray();
 
+        $found = false;
         foreach ($customerGroups as $group) {
             if ($group['value']==0) {
                 $found = true;
             }
         }
         if (!$found) {
-            array_unshift($customerGroups, array(
-                'value' => 0,
-                'label' => Mage::helper('salesrule')->__('NOT LOGGED IN'))
-            );
+            array_unshift($customerGroups, array('value'=>0, 'label'=>Mage::helper('salesrule')->__('NOT LOGGED IN')));
         }
 
         $fieldset->addField('customer_group_ids', 'multiselect', array(
@@ -164,7 +161,7 @@ class Mage_Adminhtml_Block_Promo_Quote_Edit_Tab_Main
             'label'     => Mage::helper('salesrule')->__('Customer Groups'),
             'title'     => Mage::helper('salesrule')->__('Customer Groups'),
             'required'  => true,
-            'values'    => Mage::getResourceModel('customer/group_collection')->toOptionArray(),
+            'values'    => $customerGroups,
         ));
 
         $couponTypeFiled = $fieldset->addField('coupon_type', 'select', array(
@@ -179,18 +176,6 @@ class Mage_Adminhtml_Block_Promo_Quote_Edit_Tab_Main
             'label' => Mage::helper('salesrule')->__('Coupon Code'),
             'required' => true,
         ));
-
-        $autoGenerationCheckbox = $fieldset->addField('use_auto_generation', 'checkbox', array(
-            'name'  => 'use_auto_generation',
-            'label' => Mage::helper('salesrule')->__('Use Auto Generation'),
-            'note'  => Mage::helper('salesrule')->__('If you select and save the rule you will be able to generate multiple coupon codes.'),
-            'onclick' => 'handleCouponsTabContentActivity()',
-            'checked' => (int)$model->getUseAutoGeneration() > 0 ? 'checked' : ''
-        ));
-
-        $autoGenerationCheckbox->setRenderer(
-            $this->getLayout()->createBlock('adminhtml/promo_quote_edit_tab_main_renderer_checkbox')
-        );
 
         $usesPerCouponFiled = $fieldset->addField('uses_per_coupon', 'text', array(
             'name' => 'uses_per_coupon',
@@ -242,8 +227,6 @@ class Mage_Adminhtml_Block_Promo_Quote_Edit_Tab_Main
 
         $form->setValues($model->getData());
 
-        $autoGenerationCheckbox->setValue(1);
-
         if ($model->isReadonly()) {
             foreach ($fieldset->getElements() as $element) {
                 $element->setReadonly(true, true);
@@ -258,14 +241,9 @@ class Mage_Adminhtml_Block_Promo_Quote_Edit_Tab_Main
         $this->setChild('form_after', $this->getLayout()->createBlock('adminhtml/widget_form_element_dependence')
             ->addFieldMap($couponTypeFiled->getHtmlId(), $couponTypeFiled->getName())
             ->addFieldMap($couponCodeFiled->getHtmlId(), $couponCodeFiled->getName())
-            ->addFieldMap($autoGenerationCheckbox->getHtmlId(), $autoGenerationCheckbox->getName())
             ->addFieldMap($usesPerCouponFiled->getHtmlId(), $usesPerCouponFiled->getName())
             ->addFieldDependence(
                 $couponCodeFiled->getName(),
-                $couponTypeFiled->getName(),
-                Mage_SalesRule_Model_Rule::COUPON_TYPE_SPECIFIC)
-            ->addFieldDependence(
-                $autoGenerationCheckbox->getName(),
                 $couponTypeFiled->getName(),
                 Mage_SalesRule_Model_Rule::COUPON_TYPE_SPECIFIC)
             ->addFieldDependence(

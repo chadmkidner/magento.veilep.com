@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Paypal
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -194,7 +194,6 @@ class Mage_Paypal_Model_Express_Checkout
      * @param string $successUrl - payment success result
      * @param string $cancelUrl  - payment cancellation result
      * @param string $pendingUrl - pending payment result
-     * @return Mage_Paypal_Model_Express_Checkout
      */
     public function prepareGiropayUrls($successUrl, $cancelUrl, $pendingUrl)
     {
@@ -257,10 +256,7 @@ class Mage_Paypal_Model_Express_Checkout
 
     /**
      * Reserve order ID for specified quote and start checkout on PayPal
-     *
-     * @param string $returnUrl
-     * @param string $cancelUrl
-     * @return mixed
+     * @return string
      */
     public function start($returnUrl, $cancelUrl)
     {
@@ -292,15 +288,8 @@ class Mage_Paypal_Model_Express_Checkout
 
         $this->_setBillingAgreementRequest();
 
-        if ($this->_config->requireBillingAddress == Mage_Paypal_Model_Config::REQUIRE_BILLING_ADDRESS_ALL) {
-            $this->_api->setRequireBillingAddress(1);
-        }
-
         // supress or export shipping address
         if ($this->_quote->getIsVirtual()) {
-            if ($this->_config->requireBillingAddress == Mage_Paypal_Model_Config::REQUIRE_BILLING_ADDRESS_VIRTUAL) {
-                $this->_api->setRequireBillingAddress(1);
-            }
             $this->_api->setSuppressShipping(true);
         } else {
             $address = $this->_quote->getShippingAddress();
@@ -370,8 +359,6 @@ class Mage_Paypal_Model_Express_Checkout
             ->callGetExpressCheckoutDetails();
         $quote = $this->_quote;
 
-        $this->_ignoreAddressValidation();
-
         // import billing address
         $billingAddress = $quote->getBillingAddress();
         $exportedBillingAddress = $this->_api->getExportedBillingAddress();
@@ -382,7 +369,11 @@ class Mage_Paypal_Model_Express_Checkout
         $quote->setCustomerLastname($billingAddress->getLastname());
         $quote->setCustomerSuffix($billingAddress->getSuffix());
         $quote->setCustomerNote($exportedBillingAddress->getData('note'));
-        $this->_setExportedAddressData($billingAddress, $exportedBillingAddress);
+        foreach ($exportedBillingAddress->getExportedKeys() as $key) {
+            if (!$billingAddress->getDataUsingMethod($key)) {
+                $billingAddress->setDataUsingMethod($key, $exportedBillingAddress->getData($key));
+            }
+        }
 
         // import shipping address
         $exportedShippingAddress = $this->_api->getExportedShippingAddress();
@@ -390,7 +381,9 @@ class Mage_Paypal_Model_Express_Checkout
             $shippingAddress = $quote->getShippingAddress();
             if ($shippingAddress) {
                 if ($exportedShippingAddress) {
-                    $this->_setExportedAddressData($shippingAddress, $exportedShippingAddress);
+                    foreach ($exportedShippingAddress->getExportedKeys() as $key) {
+                        $shippingAddress->setDataUsingMethod($key, $exportedShippingAddress->getData($key));
+                    }
                     $shippingAddress->setCollectShippingRates(true);
                     $shippingAddress->setSameAsBilling(0);
                 }
@@ -409,6 +402,7 @@ class Mage_Paypal_Model_Express_Checkout
                 );
             }
         }
+        $this->_ignoreAddressValidation();
 
         // import payment info
         $payment = $quote->getPayment();
@@ -491,40 +485,9 @@ class Mage_Paypal_Model_Express_Checkout
             if ($methodCode != $shippingAddress->getShippingMethod()) {
                 $this->_ignoreAddressValidation();
                 $shippingAddress->setShippingMethod($methodCode)->setCollectShippingRates(true);
-                $this->_quote->collectTotals();
+                $this->_quote->collectTotals()->save();
             }
         }
-    }
-
-    /**
-     * Update order data
-     *
-     * @param array $data
-     */
-    public function updateOrder($data)
-    {
-        /** @var $checkout Mage_Checkout_Model_Type_Onepage */
-        $checkout = Mage::getModel('checkout/type_onepage');
-
-        $this->_quote->setTotalsCollectedFlag(true);
-        $checkout->setQuote($this->_quote);
-        if (isset($data['billing'])) {
-            if (isset($data['customer-email'])) {
-                $data['billing']['email'] = $data['customer-email'];
-            }
-            $checkout->saveBilling($data['billing'], 0);
-        }
-        if (!$this->_quote->getIsVirtual() && isset($data['shipping'])) {
-            $checkout->saveShipping($data['shipping'], 0);
-        }
-
-        if (isset($data['shipping_method'])) {
-            $this->updateShippingMethod($data['shipping_method']);
-        }
-        $this->_quote->setTotalsCollectedFlag(false);
-        $this->_quote->collectTotals();
-        $this->_quote->setDataChanges(true);
-        $this->_quote->save();
     }
 
     /**
@@ -541,7 +504,7 @@ class Mage_Paypal_Model_Express_Checkout
         }
 
         $isNewCustomer = false;
-        switch ($this->getCheckoutMethod()) {
+        switch ($this->_quote->getCheckoutMethod()) {
             case Mage_Checkout_Model_Type_Onepage::METHOD_GUEST:
                 $this->_prepareGuestQuote();
                 break;
@@ -607,15 +570,13 @@ class Mage_Paypal_Model_Express_Checkout
         $this->_quote->getBillingAddress()->setShouldIgnoreValidation(true);
         if (!$this->_quote->getIsVirtual()) {
             $this->_quote->getShippingAddress()->setShouldIgnoreValidation(true);
-            if (!$this->_config->requireBillingAddress && !$this->_quote->getBillingAddress()->getEmail()) {
-                $this->_quote->getBillingAddress()->setSameAsBilling(1);
-            }
         }
     }
 
     /**
      * Determine whether redirect somewhere specifically is required
      *
+     * @param string $action
      * @return string
      */
     public function getRedirectUrl()
@@ -651,52 +612,6 @@ class Mage_Paypal_Model_Express_Checkout
     public function getOrder()
     {
         return $this->_order;
-    }
-
-    /**
-     * Get checkout method
-     *
-     * @return string
-     */
-    public function getCheckoutMethod()
-    {
-        if ($this->getCustomerSession()->isLoggedIn()) {
-            return Mage_Checkout_Model_Type_Onepage::METHOD_CUSTOMER;
-        }
-        if (!$this->_quote->getCheckoutMethod()) {
-            if (Mage::helper('checkout')->isAllowedGuestCheckout($this->_quote)) {
-                $this->_quote->setCheckoutMethod(Mage_Checkout_Model_Type_Onepage::METHOD_GUEST);
-            } else {
-                $this->_quote->setCheckoutMethod(Mage_Checkout_Model_Type_Onepage::METHOD_REGISTER);
-            }
-        }
-        return $this->_quote->getCheckoutMethod();
-    }
-
-    /**
-     * Sets address data from exported address
-     *
-     * @param Mage_Sales_Model_Quote_Address $address
-     * @param array $exportedAddress
-     */
-    protected function _setExportedAddressData($address, $exportedAddress)
-    {
-        foreach ($exportedAddress->getExportedKeys() as $key) {
-            $oldData = $address->getDataUsingMethod($key);
-            $isEmpty = null;
-            if (is_array($oldData)) {
-                foreach($oldData as $val) {
-                    if(!empty($val)) {
-                        $isEmpty = false;
-                        break;
-                    }
-                    $isEmpty = true;
-                }
-            }
-            if (empty($oldData) || $isEmpty === true) {
-                $address->setDataUsingMethod($key, $exportedAddress->getData($key));
-            }
-        }
     }
 
     /**
@@ -920,8 +835,8 @@ class Mage_Paypal_Model_Express_Checkout
         $customer->setSuffix($quote->getCustomerSuffix());
         $customer->setPassword($customer->decryptPassword($quote->getPasswordHash()));
         $customer->setPasswordHash($customer->hashPassword($customer->getPassword()));
-        $customer->save();
-        $quote->setCustomer($customer);
+        $quote->setCustomer($customer)
+            ->setCustomerId(true);
 
         return $this;
     }

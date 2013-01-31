@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -73,7 +73,6 @@ class Mage_Adminhtml_Block_Report_Sales_Refunded_Grid extends Mage_Adminhtml_Blo
             $this->setStoreIds(explode(',', $this->getFilterData()->getStoreIds()));
         }
         $currencyCode = $this->getCurrentCurrencyCode();
-        $rate = $this->getRate($currencyCode);
 
         $this->addColumn('refunded', array(
             'header'        => Mage::helper('sales')->__('Total Refunded'),
@@ -81,8 +80,7 @@ class Mage_Adminhtml_Block_Report_Sales_Refunded_Grid extends Mage_Adminhtml_Blo
             'currency_code' => $currencyCode,
             'index'         => 'refunded',
             'total'         => 'sum',
-            'sortable'      => false,
-            'rate'          => $rate,
+            'sortable'      => false
         ));
 
         $this->addColumn('online_refunded', array(
@@ -91,8 +89,7 @@ class Mage_Adminhtml_Block_Report_Sales_Refunded_Grid extends Mage_Adminhtml_Blo
             'currency_code' => $currencyCode,
             'index'         => 'online_refunded',
             'total'         => 'sum',
-            'sortable'      => false,
-            'rate'          => $rate,
+            'sortable'      => false
         ));
 
         $this->addColumn('offline_refunded', array(
@@ -101,8 +98,7 @@ class Mage_Adminhtml_Block_Report_Sales_Refunded_Grid extends Mage_Adminhtml_Blo
             'currency_code' => $currencyCode,
             'index'         => 'offline_refunded',
             'total'         => 'sum',
-            'sortable'      => false,
-            'rate'          => $rate,
+            'sortable'      => false
         ));
 
         $this->addExportType('*/*/exportRefundedCsv', Mage::helper('adminhtml')->__('CSV'));

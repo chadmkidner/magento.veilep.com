@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Sales
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -49,30 +49,20 @@ class Mage_Sales_Model_Order_Creditmemo_Total_Discount extends Mage_Sales_Model_
             $baseTotalDiscountAmount = $baseTotalDiscountAmount + $baseShippingDiscount;
         }
 
-        /** @var $item Mage_Sales_Model_Order_Invoice_Item */
         foreach ($creditmemo->getAllItems() as $item) {
-            $orderItem = $item->getOrderItem();
-
-            if ($orderItem->isDummy()) {
+            if ($item->getOrderItem()->isDummy()) {
                 continue;
             }
-
-            $orderItemDiscount      = (float) $orderItem->getDiscountInvoiced();
-            $baseOrderItemDiscount  = (float) $orderItem->getBaseDiscountInvoiced();
-            $orderItemQty           = $orderItem->getQtyInvoiced();
+            $orderItemDiscount      = (float) $item->getOrderItem()->getDiscountAmount();
+            $baseOrderItemDiscount  = (float) $item->getOrderItem()->getBaseDiscountAmount();
+            $orderItemQty       = $item->getOrderItem()->getQtyOrdered();
 
             if ($orderItemDiscount && $orderItemQty) {
-                $discount = $orderItemDiscount - $orderItem->getDiscountRefunded();
-                $baseDiscount = $baseOrderItemDiscount - $orderItem->getBaseDiscountRefunded();
-                if (!$item->isLast()) {
-                    $availableQty = $orderItemQty - $orderItem->getQtyRefunded();
-                    $discount = $creditmemo->roundPrice(
-                        $discount / $availableQty * $item->getQty(), 'regular', true
-                    );
-                    $baseDiscount = $creditmemo->roundPrice(
-                        $baseDiscount / $availableQty * $item->getQty(), 'base', true
-                    );
-                }
+                $discount = $orderItemDiscount*$item->getQty()/$orderItemQty;
+                $baseDiscount = $baseOrderItemDiscount*$item->getQty()/$orderItemQty;
+
+                $discount = $creditmemo->getStore()->roundPrice($discount);
+                $baseDiscount = $creditmemo->getStore()->roundPrice($baseDiscount);
 
                 $item->setDiscountAmount($discount);
                 $item->setBaseDiscountAmount($baseDiscount);

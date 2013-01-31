@@ -20,53 +20,50 @@
  *
  * @category    Mage
  * @package     Mage_Connect
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
+
 class Mage_Connect_Frontend
 {
+
     /**
      * Silent flag. If set no output is produced to view.
      * Should be used in derived classes.
-     *
-     * @var boolean
+     * @var bool
      */
     protected $_silent = false;
 
     /**
      * Capture mode. If set command output should be collected
      * by derived class impplementation
-     *
-     * @var boolean
+     * @var bool
      */
     protected $_capture = false;
 
+
     /**
      * push/pop variable for capture
-     *
      * @var array
      */
     protected $_captureSaved = array();
 
     /**
      * push/pop variable for silent
-     *
      * @var array
      */
     protected $_silentSaved = array();
 
     /**
      * Errors list
-     *
      * @var array
      */
     protected $_errors = array();
 
     /**
      * Add error to errors list
-     *
      * @param mixed $data
-     * @return null
+     * @return void
      */
     public function addError($data)
     {
@@ -75,8 +72,7 @@ class Mage_Connect_Frontend
 
     /**
      * Get errors, clear errors list with first param
-     *
-     * @param boolean $clear
+     * @param bool $clear
      * @return array
      */
     public function getErrors($clear = true)
@@ -91,8 +87,7 @@ class Mage_Connect_Frontend
 
     /**
      * Clear errors array
-     *
-     * @return null
+     * @return void
      */
     public function clearErrors()
     {
@@ -101,8 +96,7 @@ class Mage_Connect_Frontend
 
     /**
      * Are there any errros?
-     *
-     * @return boolean
+     * @return bool
      */
     public function hasErrors()
     {
@@ -112,8 +106,8 @@ class Mage_Connect_Frontend
     /**
      * Error processing
      * @param string $command
-     * @param string $message
-     * @return null
+     * @param stting $message
+     * @return void
      */
     public function doError($command, $message)
     {
@@ -122,7 +116,6 @@ class Mage_Connect_Frontend
 
     /**
      * Save capture state
-     *
      * @return Mage_Connect_Frontend
      */
     public function pushCapture()
@@ -133,7 +126,6 @@ class Mage_Connect_Frontend
 
     /**
      * Restore capture state
-     *
      * @return Mage_Connect_Frontend
      */
     public function popCapture()
@@ -144,8 +136,7 @@ class Mage_Connect_Frontend
 
     /**
      * Set capture mode
-     *
-     * @param boolean $arg true by default
+     * @param bool $arg true by default
      * @return Mage_Connect_Frontend
      */
     public function setCapture($arg = true)
@@ -156,8 +147,7 @@ class Mage_Connect_Frontend
 
     /**
      * Getter for capture mode
-     *
-     * @return boolean
+     * @return bool
      */
     public function isCapture()
     {
@@ -166,7 +156,6 @@ class Mage_Connect_Frontend
 
     /**
      * Log stub
-     *
      * @param $msg
      * @return
      */
@@ -177,9 +166,8 @@ class Mage_Connect_Frontend
 
     /**
      * Ouptut method
-     *
      * @param array $data
-     * @return null
+     * @return void
      */
     public function output($data)
     {
@@ -201,8 +189,7 @@ class Mage_Connect_Frontend
     /**
      * Get output if capture mode set
      * Clear prevoius if needed
-     *
-     * @param boolean $clearPrevious
+     * @param bool $clearPrevious
      * @return mixed
      */
     public function getOutput($clearPrevious = true)
@@ -210,9 +197,9 @@ class Mage_Connect_Frontend
 
     }
 
+
     /**
      * Save silent mode
-     *
      * @return Mage_Connect_Frontend
      */
     public function pushSilent()
@@ -223,7 +210,6 @@ class Mage_Connect_Frontend
 
     /**
      * Restore silent mode
-     *
      * @return Mage_Connect_Frontend
      */
     public function popSilent()
@@ -234,24 +220,22 @@ class Mage_Connect_Frontend
 
     /**
      * Set silent mode
-     *
-     * @param boolean $value
+     * @param bool $value
      * @return Mage_Connect_Frontend
      */
     public function setSilent($value = true)
     {
-        $this->_silent = (boolean) $value;
+        $this->_silent = (bool) $value;
         return $this;
     }
 
     /**
      * Is silent mode?
-     *
-     * @return boolean
+     * @return bool
      */
     public function isSilent()
     {
-        return (boolean) $this->_silent;
+        return (bool) $this->_silent;
     }
 
     /**
@@ -261,7 +245,7 @@ class Mage_Connect_Frontend
     */
     public function confirm($string)
     {
-
+        
     }
 }
 

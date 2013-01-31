@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Paypal
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -132,14 +132,13 @@ class Mage_Paypal_Model_Ipn
     {
             $sReq = '';
             foreach ($this->_request as $k => $v) {
-                $sReq .= '&'.$k.'='.urlencode($v);
+                $sReq .= '&'.$k.'='.urlencode(stripslashes($v));
             }
             $sReq .= "&cmd=_notify-validate";
             $sReq = substr($sReq, 1);
             $this->_debugData['postback'] = $sReq;
             $this->_debugData['postback_to'] = $this->_config->getPaypalUrl();
 
-            $httpAdapter->setConfig(array('verifypeer' => $this->_config->verifyPeer));
             $httpAdapter->write(Zend_Http_Client::POST, $this->_config->getPaypalUrl(), '1.1', array(), $sReq);
             try {
                 $response = $httpAdapter->read();
@@ -171,12 +170,7 @@ class Mage_Paypal_Model_Ipn
             $id = $this->_request['invoice'];
             $this->_order = Mage::getModel('sales/order')->loadByIncrementId($id);
             if (!$this->_order->getId()) {
-                $this->_debugData['exception'] = sprintf('Wrong order ID: "%s".', $id);
-                $this->_debug();
-                Mage::app()->getResponse()
-                    ->setHeader('HTTP/1.1','503 Service Unavailable')
-                    ->sendResponse();
-                exit;
+                throw new Exception(sprintf('Wrong order ID: "%s".', $id));
             }
             // re-initialize config with the method code and store id
             $methodCode = $this->_order->getPayment()->getMethod();
@@ -399,13 +393,12 @@ class Mage_Paypal_Model_Ipn
         $this->_order->save();
 
         // notify customer
-        $invoice = $payment->getCreatedInvoice();
-        if ($invoice && !$this->_order->getEmailSent()) {
-            $this->_order->sendNewOrderEmail()->addStatusHistoryComment(
-                Mage::helper('paypal')->__('Notified customer about invoice #%s.', $invoice->getIncrementId())
-            )
-            ->setIsCustomerNotified(true)
-            ->save();
+        if ($invoice = $payment->getCreatedInvoice() && !$this->_order->getEmailSent()) {
+            $comment = $this->_order->sendNewOrderEmail()->addStatusHistoryComment(
+                    Mage::helper('paypal')->__('Notified customer about invoice #%s.', $invoice->getIncrementId())
+                )
+                ->setIsCustomerNotified(true)
+                ->save();
         }
     }
 

@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Catalog
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -28,10 +28,9 @@
 /**
  * Product View block
  *
- * @category Mage
- * @package  Mage_Catalog
- * @module   Catalog
- * @author   Magento Core Team <core@magentocommerce.com>
+ * @category   Mage
+ * @package    Mage_Catalog
+ * @module     Catalog
  */
 class Mage_Catalog_Block_Product_View extends Mage_Catalog_Block_Product_Abstract
 {
@@ -122,14 +121,14 @@ class Mage_Catalog_Block_Product_View extends Mage_Catalog_Block_Product_Abstrac
         }
 
         $addUrlKey = Mage_Core_Controller_Front_Action::PARAM_NAME_URL_ENCODED;
-        $addUrlValue = Mage::getUrl('*/*/*', array('_use_rewrite' => true, '_current' => true));
+        $addUrlValue = Mage::getUrl('*/*/*', array('_use_rewrite' => true, '_current' => false));
         $additional[$addUrlKey] = Mage::helper('core')->urlEncode($addUrlValue);
 
         return $this->helper('checkout/cart')->getAddUrl($product, $additional);
     }
 
     /**
-     * Get JSON encoded configuration array which can be used for JS dynamic
+     * Get JSON encripted configuration array which can be used for JS dynamic
      * price calculation depending on product options
      *
      * @return string
@@ -142,29 +141,20 @@ class Mage_Catalog_Block_Product_View extends Mage_Catalog_Block_Product_Abstrac
         }
 
         $_request = Mage::getSingleton('tax/calculation')->getRateRequest(false, false, false);
-        /* @var $product Mage_Catalog_Model_Product */
-        $product = $this->getProduct();
-        $_request->setProductClassId($product->getTaxClassId());
+        $_request->setProductClassId($this->getProduct()->getTaxClassId());
         $defaultTax = Mage::getSingleton('tax/calculation')->getRate($_request);
 
         $_request = Mage::getSingleton('tax/calculation')->getRateRequest();
-        $_request->setProductClassId($product->getTaxClassId());
+        $_request->setProductClassId($this->getProduct()->getTaxClassId());
         $currentTax = Mage::getSingleton('tax/calculation')->getRate($_request);
 
-        $_regularPrice = $product->getPrice();
-        $_finalPrice = $product->getFinalPrice();
-        $_priceInclTax = Mage::helper('tax')->getPrice($product, $_finalPrice, true);
-        $_priceExclTax = Mage::helper('tax')->getPrice($product, $_finalPrice);
-        $_tierPrices = array();
-        $_tierPricesInclTax = array();
-        foreach ($product->getTierPrice() as $tierPrice) {
-            $_tierPrices[] = Mage::helper('core')->currency($tierPrice['website_price'], false, false);
-            $_tierPricesInclTax[] = Mage::helper('core')->currency(
-                Mage::helper('tax')->getPrice($product, (int)$tierPrice['website_price'], true),
-                false, false);
-        }
+        $_regularPrice = $this->getProduct()->getPrice();
+        $_finalPrice = $this->getProduct()->getFinalPrice();
+        $_priceInclTax = Mage::helper('tax')->getPrice($this->getProduct(), $_finalPrice, true);
+        $_priceExclTax = Mage::helper('tax')->getPrice($this->getProduct(), $_finalPrice);
+
         $config = array(
-            'productId'           => $product->getId(),
+            'productId'           => $this->getProduct()->getId(),
             'priceFormat'         => Mage::app()->getLocale()->getJsPriceFormat(),
             'includeTax'          => Mage::helper('tax')->priceIncludesTax() ? 'true' : 'false',
             'showIncludeTax'      => Mage::helper('tax')->displayPriceIncludingTax(),
@@ -183,11 +173,8 @@ class Mage_Catalog_Block_Product_View extends Mage_Catalog_Block_Product_Abstrac
             'idSuffix'            => '_clone',
             'oldPlusDisposition'  => 0,
             'plusDisposition'     => 0,
-            'plusDispositionTax'  => 0,
             'oldMinusDisposition' => 0,
             'minusDisposition'    => 0,
-            'tierPrices'          => $_tierPrices,
-            'tierPricesInclTax'   => $_tierPricesInclTax,
         );
 
         $responseObject = new Varien_Object();
@@ -241,7 +228,8 @@ class Mage_Catalog_Block_Product_View extends Mage_Catalog_Block_Product_Abstrac
      * Get default qty - either as preconfigured, or as 1.
      * Also restricts it by minimal qty.
      *
-     * @param null|Mage_Catalog_Model_Product $product
+     * @param null|Mage_Catalog_Model_Product
+     *
      * @return int|float
      */
     public function getProductDefaultQty($product = null)

@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Eav
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -430,8 +430,7 @@ abstract class Mage_Eav_Model_Entity_Collection_Abstract extends Varien_Data_Col
         if ($joinType !== false && !$this->getEntity()->getAttribute($attribute)->isStatic()) {
             $this->_addAttributeJoin($attribute, $joinType);
         } elseif ('*' === $attribute) {
-            $entity = clone $this->getEntity();
-            $attributes = $entity
+            $attributes = $this->getEntity()
                 ->loadAllAttributes()
                 ->getAttributesByCode();
             foreach ($attributes as $attrCode=>$attr) {
@@ -704,7 +703,7 @@ abstract class Mage_Eav_Model_Entity_Collection_Abstract extends Varien_Data_Col
         // validate bind
         list($pk, $fk) = explode('=', $bind);
         $pk = $this->getSelect()->getAdapter()->quoteColumnAs(trim($pk), null);
-        $bindCond = $tableAlias . '.' . trim($pk) . '=' . $this->_getAttributeFieldName(trim($fk));
+        $bindCond = $tableAlias . '.' . $pk . '=' . $this->_getAttributeFieldName($fk);
 
         // process join type
         switch ($joinType) {
@@ -865,7 +864,6 @@ abstract class Mage_Eav_Model_Entity_Collection_Abstract extends Varien_Data_Col
         Varien_Profiler::stop('__EAV_COLLECTION_BEFORE_LOAD__');
 
         $this->_renderFilters();
-        $this->_renderOrders();
 
         Varien_Profiler::start('__EAV_COLLECTION_LOAD_ENT__');
         $this->_loadEntities($printQuery, $logQuery);
@@ -1409,10 +1407,12 @@ abstract class Mage_Eav_Model_Entity_Collection_Abstract extends Varien_Data_Col
     {
         if (is_array($attribute)) {
             foreach ($attribute as $attr) {
-                parent::setOrder($attr, $dir);
+                $this->addAttributeToSort($attr, $dir);
             }
+        } else {
+            $this->addAttributeToSort($attribute, $dir);
         }
-        return parent::setOrder($attribute, $dir);
+        return $this;
     }
 
     /**
@@ -1431,18 +1431,12 @@ abstract class Mage_Eav_Model_Entity_Collection_Abstract extends Varien_Data_Col
     }
 
     /**
-     * Treat "order by" items as attributes to sort
+     * Before load method
      *
      * @return Mage_Eav_Model_Entity_Collection_Abstract
      */
-    protected function _renderOrders()
+    protected function _beforeLoad()
     {
-        if (!$this->_isOrdersRendered) {
-            foreach ($this->_orders as $attribute => $direction) {
-                $this->addAttributeToSort($attribute, $direction);
-            }
-            $this->_isOrdersRendered = true;
-        }
         return $this;
     }
 

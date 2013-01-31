@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Catalog
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -34,25 +34,26 @@ $multiSelectAttributeCodes = $eavResource->getAttributeCodesByFrontendType('mult
 
 foreach($multiSelectAttributeCodes as $attributeCode) {
     /** @var $attribute Mage_Catalog_Model_Resource_Eav_Attribute */
-    $attribute = $installer->getAttribute('catalog_product', $attributeCode);
-    if ($attribute) {
+    if ($attribute = $installer->getAttribute('catalog_product', $attributeCode)) {
         $attributeTable = $installer->getAttributeTable('catalog_product', $attributeCode);
         $select = $installer->getConnection()->select()
             ->from(array('e' => $attributeTable))
-            ->where("e.attribute_id=?", $attribute['attribute_id'])
-            ->where('e.value LIKE "%,,%"');
-        $result = $installer->getConnection()->fetchAll($select);
+            ->where("e.attribute_id=?", $attribute['attribute_id']);
 
-        if ($result) {
+        if ($result = $installer->getConnection()->fetchAll($select)) {
             foreach ($result as $row) {
-                if (isset($row['value']) && !empty($row['value'])) {
-                    // 1,2,,,3,5 --> 1,2,3,5
-                    $row['value'] = preg_replace('/,{2,}/', ',', $row['value'], -1, $replaceCnt);
-
-                    if ($replaceCnt) {
-                        $installer->getConnection()
-                            ->update($attributeTable, array('value' => $row['value']), "value_id=" . $row['value_id']);
+                $value = explode(',', $row['value']);
+                if (is_array($value) && count($value) > 1) {
+                    foreach ($value as $optionKey => $optionValue) {
+                        if ($optionValue === '') {
+                            unset($value[$optionKey]);
+                        }
                     }
+                    $value = implode(',', $value);
+                    $installer->getConnection()
+                        ->update($attributeTable, array('value'=>$value), "value_id=" . $row['value_id']);
+                } else {
+                    unset($value);
                 }
             }
         }

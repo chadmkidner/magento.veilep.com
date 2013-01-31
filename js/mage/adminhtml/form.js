@@ -19,7 +19,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 var varienForm = new Class.create();
@@ -101,11 +101,10 @@ varienForm.prototype = {
     },
 
     _submit : function(){
-        var $form = $(this.formId);
         if(this.submitUrl){
-            $form.action = this.submitUrl;
+            $(this.formId).action = this.submitUrl;
         }
-        $form.submit();
+        $(this.formId).submit();
     }
 }
 
@@ -192,8 +191,6 @@ RegionUpdater.prototype = {
 //        // clone for select element (#6924)
 //        this._regionSelectEl = {};
 //        this.tpl = new Template('<select class="#{className}" name="#{name}" id="#{id}">#{innerHTML}</select>');
-        this.config = regions['config'];
-        delete regions.config;
         this.regions = regions;
         this.disableAction = (typeof disableAction=='undefined') ? 'hide' : disableAction;
         this.clearRegionValueOnDisable = (typeof clearRegionValueOnDisable == 'undefined') ? false : clearRegionValueOnDisable;
@@ -210,64 +207,6 @@ RegionUpdater.prototype = {
         Event.observe(this.countryEl, 'change', this.update.bind(this));
     },
 
-    _checkRegionRequired: function()
-    {
-        var label, wildCard;
-        var elements = [this.regionTextEl, this.regionSelectEl];
-        var that = this;
-        if (typeof this.config == 'undefined') {
-            return;
-        }
-        var regionRequired = this.config.regions_required.indexOf(this.countryEl.value) >= 0;
-
-        elements.each(function(currentElement) {
-            if(!currentElement) {
-                return;
-            }
-            Validation.reset(currentElement);
-            label = $$('label[for="' + currentElement.id + '"]')[0];
-            if (label) {
-                wildCard = label.down('em') || label.down('span.required');
-                var topElement = label.up('tr') || label.up('li');
-                if (!that.config.show_all_regions && topElement) {
-                    if (regionRequired) {
-                        topElement.show();
-                    } else {
-                        topElement.hide();
-                    }
-                }
-            }
-
-            if (label && wildCard) {
-                if (!regionRequired) {
-                    wildCard.hide();
-                } else {
-                    wildCard.show();
-                }
-            }
-
-            if (!regionRequired || !currentElement.visible()) {
-                if (currentElement.hasClassName('required-entry')) {
-                    currentElement.removeClassName('required-entry');
-                }
-                if ('select' == currentElement.tagName.toLowerCase() &&
-                    currentElement.hasClassName('validate-select')
-                ) {
-                    currentElement.removeClassName('validate-select');
-                }
-            } else {
-                if (!currentElement.hasClassName('required-entry')) {
-                    currentElement.addClassName('required-entry');
-                }
-                if ('select' == currentElement.tagName.toLowerCase() &&
-                    !currentElement.hasClassName('validate-select')
-                ) {
-                    currentElement.addClassName('validate-select');
-                }
-            }
-        });
-    },
-
     update: function()
     {
         if (this.regions[this.countryEl.value]) {
@@ -278,12 +217,12 @@ RegionUpdater.prototype = {
             if (this.lastCountryId!=this.countryEl.value) {
                 var i, option, region, def;
 
-                def = this.regionSelectEl.getAttribute('defaultValue');
                 if (this.regionTextEl) {
-                    if (!def) {
-                        def = this.regionTextEl.value.toLowerCase();
-                    }
+                    def = this.regionTextEl.value.toLowerCase();
                     this.regionTextEl.value = '';
+                }
+                if (!def) {
+                    def = this.regionSelectEl.getAttribute('defaultValue');
                 }
 
                 this.regionSelectEl.options.length = 1;
@@ -292,8 +231,7 @@ RegionUpdater.prototype = {
 
                     option = document.createElement('OPTION');
                     option.value = regionId;
-                    option.text = region.name.stripTags();
-                    option.title = region.name;
+                    option.text = region.name;
 
                     if (this.regionSelectEl.options.add) {
                         this.regionSelectEl.options.add(option);
@@ -356,7 +294,6 @@ RegionUpdater.prototype = {
 //            this.regionSelectEl = null;
         }
         varienGlobalEvents.fireEvent("address_country_changed", this.countryEl);
-        this._checkRegionRequired();
     },
 
     setMarkDisplay: function(elem, display){
@@ -450,6 +387,7 @@ SelectUpdater.prototype = {
 /**
  * Observer that watches for dependent form elements
  * If an element depends on 1 or more of other elements, it should show up only when all of them gain specified values
+ * TODO: implement multiple values per "master" elements
  */
 FormElementDependenceController = Class.create();
 FormElementDependenceController.prototype = {
@@ -458,7 +396,6 @@ FormElementDependenceController.prototype = {
      *     'id_of_dependent_element' : {
      *         'id_of_master_element_1' : 'reference_value',
      *         'id_of_master_element_2' : 'reference_value'
-     *         'id_of_master_element_3' : ['reference_value1', 'reference_value2']
      *         ...
      *     }
      * }
@@ -504,14 +441,8 @@ FormElementDependenceController.prototype = {
         var shouldShowUp = true;
         for (var idFrom in valuesFrom) {
             var from = $(idFrom);
-            if (valuesFrom[idFrom] instanceof Array) {
-                if (!from || valuesFrom[idFrom].indexOf(from.value) == -1) {
-                    shouldShowUp = false;
-                }
-            } else {
-                if (!from || from.value != valuesFrom[idFrom]) {
-                    shouldShowUp = false;
-                }
+            if (!from || from.value != valuesFrom[idFrom]) {
+                shouldShowUp = false;
             }
         }
 

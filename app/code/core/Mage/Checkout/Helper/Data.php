@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Checkout
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -31,8 +31,7 @@
  */
 class Mage_Checkout_Helper_Data extends Mage_Core_Helper_Abstract
 {
-    const XML_PATH_GUEST_CHECKOUT = 'checkout/options/guest_checkout';
-    const XML_PATH_CUSTOMER_MUST_BE_LOGGED = 'checkout/options/customer_must_be_logged';
+    const XML_PATH_GUEST_CHECKOUT           = 'checkout/options/guest_checkout';
 
     protected $_agreements = null;
 
@@ -103,8 +102,7 @@ class Mage_Checkout_Helper_Data extends Mage_Core_Helper_Abstract
             return $item->getPriceInclTax();
         }
         $qty = ($item->getQty() ? $item->getQty() : ($item->getQtyOrdered() ? $item->getQtyOrdered() : 1));
-        $taxAmount = $item->getTaxAmount() + $item->getDiscountTaxCompensation();
-        $price = (floatval($qty)) ? ($item->getRowTotal() + $taxAmount)/$qty : 0;
+        $price = (floatval($qty)) ? ($item->getRowTotal() + $item->getTaxAmount())/$qty : 0;
         return Mage::app()->getStore()->roundPrice($price);
     }
 
@@ -119,21 +117,20 @@ class Mage_Checkout_Helper_Data extends Mage_Core_Helper_Abstract
         if ($item->getRowTotalInclTax()) {
             return $item->getRowTotalInclTax();
         }
-        $tax = $item->getTaxAmount() + $item->getDiscountTaxCompensation();
+        $tax = $item->getTaxAmount();
         return $item->getRowTotal() + $tax;
     }
 
     public function getBasePriceInclTax($item)
     {
         $qty = ($item->getQty() ? $item->getQty() : ($item->getQtyOrdered() ? $item->getQtyOrdered() : 1));
-        $taxAmount = $item->getBaseTaxAmount() + $item->getBaseDiscountTaxCompensation();
-        $price = (floatval($qty)) ? ($item->getBaseRowTotal() + $taxAmount)/$qty : 0;
+        $price = (floatval($qty)) ? ($item->getBaseRowTotal() + $item->getBaseTaxAmount())/$qty : 0;
         return Mage::app()->getStore()->roundPrice($price);
     }
 
     public function getBaseSubtotalInclTax($item)
     {
-        $tax = $item->getBaseTaxAmount() + $item->getBaseDiscountTaxCompensation();
+        $tax = ($item->getBaseTaxBeforeDiscount() ? $item->getBaseTaxBeforeDiscount() : $item->getBaseTaxAmount());
         return $item->getBaseRowTotal()+$tax;
     }
 
@@ -296,15 +293,5 @@ class Mage_Checkout_Helper_Data extends Mage_Core_Helper_Abstract
     public function isContextCheckout()
     {
         return (Mage::app()->getRequest()->getParam('context') == 'checkout');
-    }
-
-    /**
-     * Check if user must be logged during checkout process
-     *
-     * @return boolean
-     */
-    public function isCustomerMustBeLogged()
-    {
-        return Mage::getStoreConfigFlag(self::XML_PATH_CUSTOMER_MUST_BE_LOGGED);
     }
 }

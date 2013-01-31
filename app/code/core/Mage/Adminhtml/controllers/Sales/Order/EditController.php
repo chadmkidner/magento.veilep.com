@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -35,6 +35,15 @@ require_once('CreateController.php');
 class Mage_Adminhtml_Sales_Order_EditController extends Mage_Adminhtml_Sales_Order_CreateController
 {
     /**
+     * Additional initialization
+     *
+     */
+    protected function _construct()
+    {
+        $this->setUsedModuleName('Mage_Sales');
+    }
+
+    /**
      * Start edit order initialization
      */
     public function startAction()
@@ -43,21 +52,13 @@ class Mage_Adminhtml_Sales_Order_EditController extends Mage_Adminhtml_Sales_Ord
         $orderId = $this->getRequest()->getParam('order_id');
         $order = Mage::getModel('sales/order')->load($orderId);
 
-        try {
-            if ($order->getId()) {
-                $this->_getSession()->setUseOldShippingMethod(true);
-                $this->_getOrderCreateModel()->initFromOrder($order);
-                $this->_redirect('*/*');
-            }
-            else {
-                $this->_redirect('*/sales_order/');
-            }
-        } catch (Mage_Core_Exception $e) {
-            Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
-            $this->_redirect('*/sales_order/view', array('order_id' => $orderId));
-        } catch (Exception $e) {
-            Mage::getSingleton('adminhtml/session')->addException($e, $e->getMessage());
-            $this->_redirect('*/sales_order/view', array('order_id' => $orderId));
+        if ($order->getId()) {
+            $this->_getSession()->setUseOldShippingMethod(true);
+            $this->_getOrderCreateModel()->initFromOrder($order);
+            $this->_redirect('*/*');
+        }
+        else {
+            $this->_redirect('*/sales_order/');
         }
     }
 
@@ -73,7 +74,7 @@ class Mage_Adminhtml_Sales_Order_EditController extends Mage_Adminhtml_Sales_Ord
             ->_setActiveMenu('sales/order')
             ->renderLayout();
     }
-
+    
     /**
      * Acl check for admin
      *
@@ -82,5 +83,5 @@ class Mage_Adminhtml_Sales_Order_EditController extends Mage_Adminhtml_Sales_Ord
     protected function _isAllowed()
     {
         return Mage::getSingleton('admin/session')->isAllowed('sales/order/actions/edit');
-    }
+    }    
 }

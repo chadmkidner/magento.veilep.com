@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Wishlist
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -49,11 +49,9 @@ abstract class Mage_Wishlist_Controller_Abstract extends Mage_Core_Controller_Fr
     protected function _processLocalizedQty($qty)
     {
         if (!$this->_localFilter) {
-            $this->_localFilter = new Zend_Filter_LocalizedToNormalized(
-                array('locale' => Mage::app()->getLocale()->getLocaleCode())
-            );
+            $this->_localFilter = new Zend_Filter_LocalizedToNormalized(array('locale' => Mage::app()->getLocale()->getLocaleCode()));
         }
-        $qty = $this->_localFilter->filter((float)$qty);
+        $qty = $this->_localFilter->filter($qty);
         if ($qty < 0) {
             $qty = null;
         }
@@ -93,7 +91,6 @@ abstract class Mage_Wishlist_Controller_Abstract extends Mage_Core_Controller_Fr
         foreach ($collection as $item) {
             /** @var Mage_Wishlist_Model_Item */
             try {
-                $disableAddToCart = $item->getProduct()->getDisableAddToCart();
                 $item->unsProduct();
 
                 // Set qty
@@ -103,7 +100,7 @@ abstract class Mage_Wishlist_Controller_Abstract extends Mage_Core_Controller_Fr
                         $item->setQty($qty);
                     }
                 }
-                $item->getProduct()->setDisableAddToCart($disableAddToCart);
+
                 // Add to cart
                 if ($item->addToCart($cart, $isOwner)) {
                     $addedItems[] = $item->getProduct();
@@ -124,7 +121,7 @@ abstract class Mage_Wishlist_Controller_Abstract extends Mage_Core_Controller_Fr
         }
 
         if ($isOwner) {
-            $indexUrl = Mage::helper('wishlist')->getListUrl($wishlist->getId());
+            $indexUrl = Mage::helper('wishlist')->getListUrl();
         } else {
             $indexUrl = Mage::getUrl('wishlist/shared', array('code' => $wishlist->getSharingCode()));
         }

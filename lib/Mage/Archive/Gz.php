@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Archive
- * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2009 Irubin Consulting Inc. DBA Varien (http://www.varien.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -42,19 +42,9 @@ class Mage_Archive_Gz extends Mage_Archive_Abstract implements Mage_Archive_Inte
     */
     public function pack($source, $destination)
     {
-        $fileReader = new Mage_Archive_Helper_File($source);
-        $fileReader->open('r');
-
-        $archiveWriter = new Mage_Archive_Helper_File_Gz($destination);
-        $archiveWriter->open('wb9');
-
-        while (!$fileReader->eof()) {
-            $archiveWriter->write($fileReader->read());
-        }
-
-        $fileReader->close();
-        $archiveWriter->close();
-
+        $data = $this->_readFile($source);
+        $gzData = gzencode($data, 9);
+        $this->_writeFile($destination, $gzData);
         return $destination;
     }
 
@@ -67,21 +57,21 @@ class Mage_Archive_Gz extends Mage_Archive_Abstract implements Mage_Archive_Inte
     */
     public function unpack($source, $destination)
     {
+        $gzPointer = gzopen($source, 'r' );
+        if (empty($gzPointer)) {
+            throw new Mage_Exception('Can\'t open GZ archive : ' . $source);
+        }
+        $data = '';
+        while (!gzeof($gzPointer)) {
+            $data .= gzread($gzPointer, 131072);
+        }
+        gzclose($gzPointer);
         if (is_dir($destination)) {
             $file = $this->getFilename($source);
             $destination = $destination . $file;
         }
-
-        $archiveReader = new Mage_Archive_Helper_File_Gz($source);
-        $archiveReader->open('r');
-
-        $fileWriter = new Mage_Archive_Helper_File($destination);
-        $fileWriter->open('w');
-
-        while (!$archiveReader->eof()) {
-            $fileWriter->write($archiveReader->read());
-        }
-
+        $this->_writeFile($destination, $data);
         return $destination;
     }
+
 }

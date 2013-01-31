@@ -93,13 +93,6 @@ class Varien_Data_Collection_Db extends Varien_Data_Collection
      */
     protected $_fetchStmt = null;
 
-    /**
-     * Whether orders are rendered
-     *
-     * @var bool
-     */
-    protected $_isOrdersRendered = false;
-
     public function __construct($conn=null)
     {
         parent::__construct();
@@ -189,7 +182,6 @@ class Varien_Data_Collection_Db extends Varien_Data_Collection
 
         $this->_conn = $conn;
         $this->_select = $this->_conn->select();
-        $this->_isOrdersRendered = false;
         return $this;
     }
 
@@ -307,19 +299,20 @@ class Varien_Data_Collection_Db extends Varien_Data_Collection
      */
     private function _setOrder($field, $direction, $unshift = false)
     {
-        $this->_isOrdersRendered = false;
         $field = (string)$this->_getMappedField($field);
         $direction = (strtoupper($direction) == self::SORT_ORDER_ASC) ? self::SORT_ORDER_ASC : self::SORT_ORDER_DESC;
-
-        unset($this->_orders[$field]); // avoid ordering by the same field twice
+        // emulate associative unshift
         if ($unshift) {
-            $orders = array($field => $direction);
-            foreach ($this->_orders as $key => $dir) {
-                $orders[$key] = $dir;
+            $orders = array($field => new Zend_Db_Expr($field . ' ' . $direction));
+            foreach ($this->_orders as $key => $expression) {
+                if (!isset($orders[$key])) {
+                    $orders[$key] = $expression;
+                }
             }
             $this->_orders = $orders;
-        } else {
-            $this->_orders[$field] = $direction;
+        }
+        else {
+            $this->_orders[$field] = new Zend_Db_Expr($field . ' ' . $direction);
         }
         return $this;
     }
@@ -373,76 +366,42 @@ class Varien_Data_Collection_Db extends Varien_Data_Collection
      * Add field filter to collection
      *
      * @see self::_getConditionSql for $condition
-     *
-     * @param   string|array $field
-     * @param   null|string|array $condition
-     *
-     * @return  Mage_Eav_Model_Entity_Collection_Abstract
+     * @param string $field
+     * @param null|string|array $condition
+     * @return Mage_Eav_Model_Entity_Collection_Abstract
      */
-    public function addFieldToFilter($field, $condition = null)
-    {
-        if (!is_array($field)) {
-            $resultCondition = $this->_translateCondition($field, $condition);
-        } else {
-            $conditions = array();
-            foreach ($field as $key => $currField) {
-                $conditions[] = $this->_translateCondition(
-                    $currField,
-                    isset($condition[$key]) ? $condition[$key] : null
-                );
-            }
-
-            $resultCondition = '(' . join(') ' . Zend_Db_Select::SQL_OR . ' (', $conditions) . ')';
-        }
-
-        $this->_select->where($resultCondition);
-
-        return $this;
-    }
-
-    /**
-     * Build sql where condition part
-     *
-     * @param   string|array $field
-     * @param   null|string|array $condition
-     *
-     * @return  string
-     */
-    protected function _translateCondition($field, $condition)
+    public function addFieldToFilter($field, $condition=null)
     {
         $field = $this->_getMappedField($field);
-        return $this->_getConditionSql($field, $condition);
+        $this->_select->where($this->_getConditionSql($field, $condition), null, Varien_Db_Select::TYPE_CONDITION);
+        return $this;
     }
 
     /**
      * Try to get mapped field name for filter to collection
      *
-     * @param   string $field
-     * @return  string
+     * @param string
+     * @return string
      */
     protected function _getMappedField($field)
     {
+        $mappedFiled = $field;
+
         $mapper = $this->_getMapper();
 
         if (isset($mapper['fields'][$field])) {
             $mappedFiled = $mapper['fields'][$field];
-        } else {
-            $mappedFiled = $field;
         }
 
         return $mappedFiled;
     }
 
-    /**
-     * Retrieve mapper data
-     *
-     * @return array|bool|null
-     */
     protected function _getMapper()
     {
         if (isset($this->_map)) {
             return $this->_map;
-        } else {
+        }
+        else {
             return false;
         }
     }
@@ -495,11 +454,12 @@ class Varien_Data_Collection_Db extends Varien_Data_Collection
      */
     protected function _renderOrders()
     {
-        if (!$this->_isOrdersRendered) {
-            foreach ($this->_orders as $field => $direction) {
-                $this->_select->order(new Zend_Db_Expr($field . ' ' . $direction));
-             }
-            $this->_isOrdersRendered = true;
+        $ordersInSelect = $this->_select->getPart(Zend_Db_Select::ORDER);
+
+        foreach ($this->_orders as $orderExpr) {
+            if (!in_array($orderExpr, $ordersInSelect)) {
+                $this->_select->order($orderExpr);
+            }
         }
 
         return $this;
@@ -522,9 +482,7 @@ class Varien_Data_Collection_Db extends Varien_Data_Collection
     /**
      * Set select distinct
      *
-     * @param   bool $flag
-     *
-     * @return  Varien_Data_Collection_Db
+     * @param bool $flag
      */
     public function distinct($flag)
     {
@@ -544,9 +502,6 @@ class Varien_Data_Collection_Db extends Varien_Data_Collection
 
     /**
      * Load data
-     *
-     * @param   bool $printQuery
-     * @param   bool $logQuery
      *
      * @return  Varien_Data_Collection_Db
      */
@@ -586,7 +541,7 @@ class Varien_Data_Collection_Db extends Varien_Data_Collection
      * Returns a collection item that corresponds to the fetched row
      * and moves the internal data pointer ahead
      *
-     * @return  Varien_Object|bool
+     * return Varien_Object|bool
      */
     public function fetchItem()
     {
@@ -682,10 +637,8 @@ class Varien_Data_Collection_Db extends Varien_Data_Collection
     /**
      * Print and/or log query
      *
-     * @param   bool $printQuery
-     * @param   bool $logQuery
-     * @param   string $sql
-     *
+     * @param boolean $printQuery
+     * @param boolean $logQuery
      * @return  Varien_Data_Collection_Db
      */
     public function printLogQuery($printQuery = false, $logQuery = false, $sql = null) {

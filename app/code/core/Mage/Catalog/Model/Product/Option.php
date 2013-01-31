@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Catalog
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -266,11 +266,7 @@ class Mage_Catalog_Model_Product_Option extends Mage_Core_Model_Abstract
             } else {
                 if ($this->getData('previous_type') != '') {
                     $previousType = $this->getData('previous_type');
-
-                    /**
-                     * if previous option has different group from one is came now
-                     * need to remove all data of previous group
-                     */
+                    //if previous option has dfferent group from one is came now need to remove all data of previous group
                     if ($this->getGroupByType($previousType) != $this->getGroupByType($this->getData('type'))) {
 
                         switch ($this->getGroupByType($previousType)) {
@@ -368,7 +364,7 @@ class Mage_Catalog_Model_Product_Option extends Mage_Core_Model_Abstract
      * get Product Option Collection
      *
      * @param Mage_Catalog_Model_Product $product
-     * @return Mage_Catalog_Model_Resource_Product_Option_Collection
+     * @return Mage_Catalog_Model_Resource_Eav_Mysql4_Product_Option_Collection
      */
     public function getProductOptionCollection(Mage_Catalog_Model_Product $product)
     {
@@ -377,13 +373,9 @@ class Mage_Catalog_Model_Product_Option extends Mage_Core_Model_Abstract
             ->addTitleToResult($product->getStoreId())
             ->addPriceToResult($product->getStoreId())
             ->setOrder('sort_order', 'asc')
-            ->setOrder('title', 'asc');
+            ->setOrder('title', 'asc')
+            ->addValuesToResult($product->getStoreId());
 
-        if ($this->getAddRequiredFilter()) {
-            $collection->addRequiredFilter($this->getAddRequiredFilterValue());
-        }
-
-        $collection->addValuesToResult($product->getStoreId());
         return $collection;
     }
 

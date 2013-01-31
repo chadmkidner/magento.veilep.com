@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Core
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -244,8 +244,7 @@ abstract class Mage_Core_Model_Resource_Db_Collection_Abstract extends Varien_Da
                     $column = $field;
                 }
 
-                if (($alias !== null && in_array($alias, $columnsToSelect)) ||
-                    // If field already joined from another table
+                if (($alias !== null && in_array($alias, $columnsToSelect)) || // If field already joined from another table
                     ($alias === null && isset($alias, $columnsToSelect))) {
                     continue;
                 }
@@ -508,8 +507,8 @@ abstract class Mage_Core_Model_Resource_Db_Collection_Abstract extends Varien_Da
     public function getData()
     {
         if ($this->_data === null) {
-
-
+            
+            
             $this->_renderFilters()
                  ->_renderOrders()
                  ->_renderLimit();
@@ -526,7 +525,7 @@ abstract class Mage_Core_Model_Resource_Db_Collection_Abstract extends Varien_Da
 
     /**
      * Prepare select for load
-     *
+     * 
      * @return string
      */
     protected function _prepareSelect(Varien_Db_Select $select)
@@ -564,13 +563,13 @@ abstract class Mage_Core_Model_Resource_Db_Collection_Abstract extends Varien_Da
             $alias = $table;
         }
 
-        if (!isset($this->_joinedTables[$table])) {
+        if (!isset($this->_joinedTables[$alias])) {
             $this->getSelect()->join(
                 array($alias => $this->getTable($table)),
                 $cond,
                 $cols
             );
-            $this->_joinedTables[$alias] = true;
+            $this->_joinedTables[$table] = true;
         }
         return $this;
     }

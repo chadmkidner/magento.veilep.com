@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -118,11 +118,10 @@ class Mage_Adminhtml_Block_Sales_Order_Shipment_View_Form extends Mage_Adminhtml
     /**
      * Check is carrier has functionality of creation shipping labels
      *
-     * @return bool
+     * @return boolean
      */
     public function canCreateShippingLabel()
     {
-        $shippingCarrier = $this->getOrder()->getShippingCarrier();
-        return $shippingCarrier && $shippingCarrier->isShippingLabelsAvailable();
+        return $this->getOrder()->getShippingCarrier()->isShippingLabelsAvailable();
     }
 }

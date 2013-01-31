@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_CatalogSearch
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -81,13 +81,6 @@ class Mage_CatalogSearch_Block_Advanced_Form extends Mage_Core_Block_Template
         return $attribute->getFrontendClass();
     }
 
-    /**
-     * Retrieve search string for given field from request
-     *
-     * @param string $attribute
-     * @param string $part
-     * @return mixed|string
-     */
     public function getAttributeValue($attribute, $part=null)
     {
         $value = $this->getRequest()->getQuery($attribute->getAttributeCode());
@@ -100,14 +93,12 @@ class Mage_CatalogSearch_Block_Advanced_Form extends Mage_Core_Block_Template
             }
         }
 
+        if (!is_array($value)) {
+            $value = htmlspecialchars($value);
+        }
         return $value;
     }
 
-    /**
-     * Retrieve the list of available currencies
-     *
-     * @return array
-     */
     public function getAvailableCurrencies()
     {
         $currencies = $this->getData('_currencies');
@@ -132,22 +123,11 @@ class Mage_CatalogSearch_Block_Advanced_Form extends Mage_Core_Block_Template
         return $currencies;
     }
 
-    /**
-     * Count available currencies
-     *
-     * @return int
-     */
     public function getCurrencyCount()
     {
         return count($this->getAvailableCurrencies());
     }
 
-    /**
-     * Retrieve currency code for attribute
-     *
-     * @param $attribute
-     * @return string
-     */
     public function getCurrency($attribute)
     {
         return Mage::app()->getStore()->getCurrentCurrencyCode();
@@ -190,12 +170,6 @@ class Mage_CatalogSearch_Block_Advanced_Form extends Mage_Core_Block_Template
         return 'string';
     }
 
-    /**
-     * Build attribute select element html string
-     *
-     * @param $attribute
-     * @return string
-     */
     public function getAttributeSelectElement($attribute)
     {
         $extra = '';
@@ -211,6 +185,8 @@ class Mage_CatalogSearch_Block_Advanced_Form extends Mage_Core_Block_Template
         else {
             array_unshift($options, array('value'=>'', 'label'=>Mage::helper('catalogsearch')->__('All')));
         }
+
+
 
         return $this->_getSelectBlock()
             ->setName($name)
@@ -261,7 +237,6 @@ class Mage_CatalogSearch_Block_Advanced_Form extends Mage_Core_Block_Template
         }
         return $block;
     }
-
     /**
      * Retrieve advanced search model object
      *
@@ -272,23 +247,11 @@ class Mage_CatalogSearch_Block_Advanced_Form extends Mage_Core_Block_Template
         return Mage::getSingleton('catalogsearch/advanced');
     }
 
-    /**
-     * Retrieve search form action string
-     *
-     * @return string
-     */
     public function getSearchPostUrl()
     {
         return $this->getUrl('*/*/result');
     }
 
-    /**
-     * Build date element html string for attribute
-     *
-     * @param $attribute
-     * @param string $part
-     * @return string
-     */
     public function getDateInput($attribute, $part = 'from')
     {
         $name = $attribute->getAttributeCode() . '[' . $part . ']';

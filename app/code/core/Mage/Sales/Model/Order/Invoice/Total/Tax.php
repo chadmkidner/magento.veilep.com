@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Sales
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -31,7 +31,6 @@ class Mage_Sales_Model_Order_Invoice_Total_Tax extends Mage_Sales_Model_Order_In
      * Collect invoice tax amount
      *
      * @param Mage_Sales_Model_Order_Invoice $invoice
-     * @return Mage_Sales_Model_Order_Invoice_Total_Tax
      */
     public function collect(Mage_Sales_Model_Order_Invoice $invoice)
     {
@@ -41,8 +40,6 @@ class Mage_Sales_Model_Order_Invoice_Total_Tax extends Mage_Sales_Model_Order_In
         $baseTotalHiddenTax  = 0;
 
         $order = $invoice->getOrder();
-
-        /** @var $item Mage_Sales_Model_Order_Invoice_Item */
         foreach ($invoice->getAllItems() as $item) {
             $orderItem = $item->getOrderItem();
             $orderItemQty = $orderItem->getQtyOrdered();
@@ -55,16 +52,21 @@ class Mage_Sales_Model_Order_Invoice_Total_Tax extends Mage_Sales_Model_Order_In
                 /**
                  * Resolve rounding problems
                  */
-                $tax            = $orderItem->getTaxAmount() - $orderItem->getTaxInvoiced();
-                $baseTax        = $orderItem->getBaseTaxAmount() - $orderItem->getBaseTaxInvoiced();
-                $hiddenTax      = $orderItem->getHiddenTaxAmount() - $orderItem->getHiddenTaxInvoiced();
-                $baseHiddenTax  = $orderItem->getBaseHiddenTaxAmount() - $orderItem->getBaseHiddenTaxInvoiced();
-                if (!$item->isLast()) {
-                    $availableQty  = $orderItemQty - $orderItem->getQtyInvoiced();
-                    $tax           = $invoice->roundPrice($tax / $availableQty * $item->getQty());
-                    $baseTax       = $invoice->roundPrice($baseTax / $availableQty * $item->getQty(), 'base');
-                    $hiddenTax     = $invoice->roundPrice($hiddenTax / $availableQty * $item->getQty());
-                    $baseHiddenTax = $invoice->roundPrice($baseHiddenTax / $availableQty * $item->getQty(), 'base');
+                if ($item->isLast()) {
+                    $tax            = $orderItem->getTaxAmount() - $orderItem->getTaxInvoiced();
+                    $baseTax        = $orderItem->getBaseTaxAmount() - $orderItem->getBaseTaxInvoiced();
+                    $hiddenTax      = $orderItem->getHiddenTaxAmount() - $orderItem->getHiddenTaxInvoiced();
+                    $baseHiddenTax  = $orderItem->getBaseHiddenTaxAmount() - $orderItem->getBaseHiddenTaxInvoiced();
+                } else {
+                    $tax            = $orderItem->getTaxAmount()*$item->getQty()/$orderItemQty;
+                    $baseTax        = $orderItem->getBaseTaxAmount()*$item->getQty()/$orderItemQty;
+                    $hiddenTax      = $orderItem->getHiddenTaxAmount()*$item->getQty()/$orderItemQty;
+                    $baseHiddenTax  = $orderItem->getBaseHiddenTaxAmount()*$item->getQty()/$orderItemQty;
+
+                    $tax            = $invoice->getStore()->roundPrice($tax);
+                    $baseTax        = $invoice->getStore()->roundPrice($baseTax);
+                    $hiddenTax      = $invoice->getStore()->roundPrice($hiddenTax);
+                    $baseHiddenTax  = $invoice->getStore()->roundPrice($baseHiddenTax);
                 }
 
                 $item->setTaxAmount($tax);
@@ -122,13 +124,12 @@ class Mage_Sales_Model_Order_Invoice_Total_Tax extends Mage_Sales_Model_Order_In
     /**
      * Check if shipping tax calculation can be included to current invoice
      * @param Mage_Sales_Model_Order_Invoice $invoice
-     * @return boolean
      */
     protected function _canIncludeShipping($invoice)
     {
         $includeShippingTax = true;
         /**
-         * Check shipping amount in previous invoices
+         * Check shipping amount in previus invoices
          */
         foreach ($invoice->getOrder()->getInvoiceCollection() as $previusInvoice) {
             if ($previusInvoice->getShippingAmount() && !$previusInvoice->isCanceled()) {

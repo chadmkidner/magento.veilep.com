@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Core
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -215,29 +215,16 @@ abstract class Mage_Core_Helper_Abstract
                 if (is_array($allowedTags) and !empty($allowedTags)) {
                     $allowed = implode('|', $allowedTags);
                     $result = preg_replace('/<([\/\s\r\n]*)(' . $allowed . ')([\/\s\r\n]*)>/si', '##$1$2$3##', $data);
-                    $result = htmlspecialchars($result, ENT_COMPAT, 'UTF-8', false);
+                    $result = htmlspecialchars($result);
                     $result = preg_replace('/##([\/\s\r\n]*)(' . $allowed . ')([\/\s\r\n]*)##/si', '<$1$2$3>', $result);
                 } else {
-                    $result = htmlspecialchars($data, ENT_COMPAT, 'UTF-8', false);
+                    $result = htmlspecialchars($data);
                 }
             } else {
                 $result = $data;
             }
         }
         return $result;
-    }
-
-     /**
-     * Remove html tags, but leave "<" and ">" signs
-     *
-     * @param   string $html
-     * @return  string
-     */
-    public function removeTags($html)
-    {
-        $html = preg_replace("# <(?![/a-z]) | (?<=\s)>(?![a-z]) #exi", "htmlentities('$0')", $html);
-        $html =  strip_tags($html);
-        return htmlspecialchars_decode($html);
     }
 
     /**
@@ -294,22 +281,6 @@ abstract class Mage_Core_Helper_Abstract
     }
 
     /**
-     * Escape quotes inside html attributes
-     * Use $addSlashes = false for escaping js that inside html attribute (onClick, onSubmit etc)
-     *
-     * @param string $data
-     * @param bool $addSlashes
-     * @return string
-     */
-    public function quoteEscape($data, $addSlashes = false)
-    {
-        if ($addSlashes === true) {
-            $data = addslashes($data);
-        }
-        return htmlspecialchars($data, ENT_QUOTES, null, false);
-    }
-
-    /**
      * Retrieve url
      *
      * @param   string $route
@@ -347,7 +318,7 @@ abstract class Mage_Core_Helper_Abstract
      *  base64_encode() for URLs encoding
      *
      *  @param    string $url
-     *  @return   string
+     *  @return	  string
      */
     public function urlEncode($url)
     {
@@ -358,7 +329,7 @@ abstract class Mage_Core_Helper_Abstract
      *  base64_dencode() for URLs dencoding
      *
      *  @param    string $url
-     *  @return   string
+     *  @return	  string
      */
     public function urlDecode($url)
     {
@@ -370,7 +341,7 @@ abstract class Mage_Core_Helper_Abstract
      *   Translate array
      *
      *  @param    array $arr
-     *  @return   array
+     *  @return	  array
      */
     public function translateArray($arr = array())
     {

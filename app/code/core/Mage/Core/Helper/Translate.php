@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Core
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -32,11 +32,11 @@
 class Mage_Core_Helper_Translate extends Mage_Core_Helper_Abstract
 {
     /**
-     * Save translation data to database for specific area
-     *
-     * @param array  $translate
+     * Save transalation data to database for specific area
+     * 
+     * @param array $translate
      * @param string $area
-     * @param string $returnType
+     * @param string $return_type
      * @return string
      */
     public function apply($translate, $area, $returnType = 'json')
@@ -49,6 +49,6 @@ class Mage_Core_Helper_Translate extends Mage_Core_Helper_Abstract
             return $returnType == 'json' ? "{success:true}" : true;
         } catch (Exception $e) {
             return $returnType == 'json' ? "{error:true,message:'" . $e->getMessage() . "'}" : false;
-        }
+        }    
     }
 }

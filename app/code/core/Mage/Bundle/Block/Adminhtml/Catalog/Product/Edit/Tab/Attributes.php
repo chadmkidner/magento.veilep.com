@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Bundle
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -72,7 +72,6 @@ class Mage_Bundle_Block_Adminhtml_Catalog_Product_Edit_Tab_Attributes
             $tax->setAfterElementHtml(
                 '<script type="text/javascript">'
                 . "
-                //<![CDATA[
                 function changeTaxClassId() {
                     if ($('price_type').value == '" . Mage_Bundle_Model_Product_Price::PRICE_TYPE_DYNAMIC . "') {
                         $('tax_class_id').disabled = true;
@@ -87,13 +86,10 @@ class Mage_Bundle_Block_Adminhtml_Catalog_Product_Edit_Tab_Attributes
                     }
                 }
 
-                document.observe('dom:loaded', function() {
-                    if ($('price_type')) {
-                        $('price_type').observe('change', changeTaxClassId);
-                        changeTaxClassId();
-                    }
-                });
-                //]]>
+                if ($('price_type')) {
+                    $('price_type').observe('change', changeTaxClassId);
+                    changeTaxClassId();
+                }
                 "
                 . '</script>'
             );
@@ -111,15 +107,6 @@ class Mage_Bundle_Block_Adminhtml_Catalog_Product_Edit_Tab_Attributes
         if ($tier_price) {
             $tier_price->setRenderer(
                 $this->getLayout()->createBlock('adminhtml/catalog_product_edit_tab_price_tier')
-                    ->setPriceColumnHeader(Mage::helper('bundle')->__('Percent Discount'))
-                    ->setPriceValidation('validate-greater-than-zero validate-percents')
-            );
-        }
-
-        $groupPrice = $this->getForm()->getElement('group_price');
-        if ($groupPrice) {
-            $groupPrice->setRenderer(
-                $this->getLayout()->createBlock('adminhtml/catalog_product_edit_tab_price_group')
                     ->setPriceColumnHeader(Mage::helper('bundle')->__('Percent Discount'))
                     ->setPriceValidation('validate-greater-than-zero validate-percents')
             );

@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -67,7 +67,7 @@ class Mage_Adminhtml_Model_Config extends Varien_Simplexml_Config
     }
 
     /**
-     * Retrieve tabs
+     * Retrive tabs
      *
      * @return Varien_Simplexml_Element
      */
@@ -80,20 +80,18 @@ class Mage_Adminhtml_Model_Config extends Varien_Simplexml_Config
         return $this->_tabs;
     }
 
-    /**
-     * Init modules configuration
-     *
-     * @return void
-     */
     protected function _initSectionsAndTabs()
     {
-        $config = Mage::getConfig()->loadModulesConfiguration('system.xml')
-            ->applyExtends();
+        $mergeConfig = Mage::getModel('core/config_base');
 
-        Mage::dispatchEvent('adminhtml_init_system_config', array('config' => $config));
+        $config = Mage::getConfig()->loadModulesConfiguration('system.xml');
+
         $this->_sections = $config->getNode('sections');
+
         $this->_tabs = $config->getNode('tabs');
     }
+
+
 
     /**
      * Enter description here...
@@ -105,6 +103,7 @@ class Mage_Adminhtml_Model_Config extends Varien_Simplexml_Config
      */
     public function getSection($sectionCode=null, $websiteCode=null, $storeCode=null)
     {
+
         if ($sectionCode){
             return  $this->getSections()->$sectionCode;
         } elseif ($websiteCode) {
@@ -132,7 +131,7 @@ class Mage_Adminhtml_Model_Config extends Varien_Simplexml_Config
                     $showTab=true;
                 }
             }
-        } elseif ($websiteCode) {
+        }elseif ($websiteCode) {
             if (isset($node->show_in_website)) {
                 if ((int)$node->show_in_website) {
                     $showTab=true;
@@ -163,6 +162,7 @@ class Mage_Adminhtml_Model_Config extends Varien_Simplexml_Config
             }
         }
         return false;
+
     }
 
     /**

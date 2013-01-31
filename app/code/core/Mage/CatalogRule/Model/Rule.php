@@ -20,13 +20,13 @@
  *
  * @category    Mage
  * @package     Mage_CatalogRule
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 
 /**
- * Catalog Rule data model
+ * Enter description here ...
  *
  * @method Mage_CatalogRule_Model_Resource_Rule _getResource()
  * @method Mage_CatalogRule_Model_Resource_Rule getResource()
@@ -60,11 +60,8 @@
  * @package     Mage_CatalogRule
  * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_CatalogRule_Model_Rule extends Mage_Rule_Model_Abstract
+class Mage_CatalogRule_Model_Rule extends Mage_Rule_Model_Rule
 {
-    /**
-     * Related cache types config path
-     */
     const XML_NODE_RELATED_CACHE = 'global/catalogrule/related_cache_types';
 
     /**
@@ -84,7 +81,7 @@ class Mage_CatalogRule_Model_Rule extends Mage_Rule_Model_Abstract
     protected $_eventObject = 'rule';
 
     /**
-     * Store matched product Ids
+     * Matched product ids array
      *
      * @var array
      */
@@ -97,11 +94,6 @@ class Mage_CatalogRule_Model_Rule extends Mage_Rule_Model_Abstract
      */
     protected $_productsFilter = null;
 
-    /**
-     * Store current date at "Y-m-d H:i:s" format
-     *
-     * @var string
-     */
     protected $_now;
 
     /**
@@ -122,44 +114,35 @@ class Mage_CatalogRule_Model_Rule extends Mage_Rule_Model_Abstract
     }
 
     /**
-     * Getter for rule conditions collection
+     * Filtering products that must be checked for matching with rule
      *
-     * @return Mage_CatalogRule_Model_Rule_Condition_Combine
+     * @param  int|array $productIds
      */
+    public function setProductsFilter($productIds)
+    {
+        $this->_productsFilter = $productIds;
+    }
+
+    /**
+     * Returns products filter
+     *
+     * @return array|int|null
+     */
+    public function getProductsFilter()
+    {
+        return $this->_productsFilter;
+    }
+
     public function getConditionsInstance()
     {
         return Mage::getModel('catalogrule/rule_condition_combine');
     }
 
-    /**
-     * Getter for rule actions collection
-     *
-     * @return Mage_CatalogRule_Model_Rule_Action_Collection
-     */
     public function getActionsInstance()
     {
         return Mage::getModel('catalogrule/rule_action_collection');
     }
 
-    /**
-     * Get catalog rule customer group Ids
-     *
-     * @return array
-     */
-    public function getCustomerGroupIds()
-    {
-        if (!$this->hasCustomerGroupIds()) {
-            $customerGroupIds = $this->_getResource()->getCustomerGroupIds($this->getId());
-            $this->setData('customer_group_ids', (array)$customerGroupIds);
-        }
-        return $this->_getData('customer_group_ids');
-    }
-
-    /**
-     * Retrieve current date for current rule
-     *
-     * @return string
-     */
     public function getNow()
     {
         if (!$this->_now) {
@@ -168,14 +151,69 @@ class Mage_CatalogRule_Model_Rule extends Mage_Rule_Model_Abstract
         return $this->_now;
     }
 
-    /**
-     * Set current date for current rule
-     *
-     * @param string $now
-     */
     public function setNow($now)
     {
         $this->_now = $now;
+    }
+
+    public function toString($format='')
+    {
+        $str = Mage::helper('catalogrule')->__("Name: %s", $this->getName()) ."\n"
+             . Mage::helper('catalogrule')->__("Start at: %s", $this->getStartAt()) ."\n"
+             . Mage::helper('catalogrule')->__("Expire at: %s", $this->getExpireAt()) ."\n"
+             . Mage::helper('catalogrule')->__("Customer Registered: %s", $this->getCustomerRegistered()) ."\n"
+             . Mage::helper('catalogrule')->__("Customer is a New Buyer: %s", $this->getCustomerNewBuyer()) ."\n"
+             . Mage::helper('catalogrule')->__("Description: %s", $this->getDescription()) ."\n\n"
+             . $this->getConditions()->toStringRecursive() ."\n\n"
+             . $this->getActions()->toStringRecursive() ."\n\n";
+        return $str;
+    }
+
+    /**
+     * Returns rule as an array for admin interface
+     *
+     * Output example:
+     * array(
+     *   'name'=>'Example rule',
+     *   'conditions'=>{condition_combine::toArray}
+     *   'actions'=>{action_collection::toArray}
+     * )
+     *
+     * @return array
+     */
+    public function toArray(array $arrAttributes = array())
+    {
+        $out = parent::toArray($arrAttributes);
+        $out['customer_registered'] = $this->getCustomerRegistered();
+        $out['customer_new_buyer'] = $this->getCustomerNewBuyer();
+
+        return $out;
+    }
+
+    /**
+     * Invalidate related cache types
+     *
+     * @return Mage_CatalogRule_Model_Rule
+     */
+    protected function _invalidateCache()
+    {
+        $types = Mage::getConfig()->getNode(self::XML_NODE_RELATED_CACHE);
+        if ($types) {
+            $types = $types->asArray();
+            Mage::app()->getCacheInstance()->invalidateType(array_keys($types));
+        }
+        return $this;
+    }
+
+    /**
+     * Process rule related data after rule save
+     *
+     * @return Mage_CatalogRule_Model_Rule
+     */
+    protected function _afterSave()
+    {
+        $this->_getResource()->updateRuleProductData($this);
+        parent::_afterSave();
     }
 
     /**
@@ -188,14 +226,18 @@ class Mage_CatalogRule_Model_Rule extends Mage_Rule_Model_Abstract
         if (is_null($this->_productIds)) {
             $this->_productIds = array();
             $this->setCollectedAttributes(array());
+            $websiteIds = $this->getWebsiteIds();
+            if (!is_array($websiteIds)) {
+                $websiteIds = explode(',', $websiteIds);
+            }
 
-            if ($this->getWebsiteIds()) {
-                /** @var $productCollection Mage_Catalog_Model_Resource_Eav_Mysql4_Product_Collection */
-                $productCollection = Mage::getResourceModel('catalog/product_collection');
-                $productCollection->addWebsiteFilter($this->getWebsiteIds());
+            if ($websiteIds) {
+                $productCollection = Mage::getResourceModel('catalog/product_collection')
+                    ->addWebsiteFilter($websiteIds);
                 if ($this->_productsFilter) {
                     $productCollection->addIdFilter($this->_productsFilter);
                 }
+
                 $this->getConditions()->collectValidatedAttributes($productCollection);
 
                 Mage::getSingleton('core/resource_iterator')->walk(
@@ -232,19 +274,39 @@ class Mage_CatalogRule_Model_Rule extends Mage_Rule_Model_Abstract
      * Apply rule to product
      *
      * @param int|Mage_Catalog_Model_Product $product
-     * @param array|null $websiteIds
-     *
+     * @param array $websiteIds
      * @return void
      */
-    public function applyToProduct($product, $websiteIds = null)
+    public function applyToProduct($product, $websiteIds=null)
     {
         if (is_numeric($product)) {
             $product = Mage::getModel('catalog/product')->load($product);
         }
         if (is_null($websiteIds)) {
-            $websiteIds = $this->getWebsiteIds();
+            $websiteIds = explode(',', $this->getWebsiteIds());
         }
         $this->getResource()->applyToProduct($this, $product, $websiteIds);
+    }
+
+    /**
+     * Get array of assigned customer group ids
+     *
+     * @return array
+     */
+    public function getCustomerGroupIds()
+    {
+        $ids = $this->getData('customer_group_ids');
+        if (($ids && !$this->getCustomerGroupChecked()) || is_string($ids)) {
+            if (is_string($ids)) {
+                $ids = explode(',', $ids);
+            }
+
+            $groupIds = Mage::getModel('customer/group')->getCollection()->getAllIds();
+            $ids = array_intersect($ids, $groupIds);
+            $this->setData('customer_group_ids', $ids);
+            $this->setCustomerGroupChecked(true);
+        }
+        return $ids;
     }
 
     /**
@@ -292,8 +354,8 @@ class Mage_CatalogRule_Model_Rule extends Mage_Rule_Model_Abstract
     /**
      * Calculate price using catalog price rule of product
      *
-     * @param Mage_Catalog_Model_Product $product
-     * @param float $price
+     * @param  Mage_Catalog_Model_Product $product
+     * @param  float $price
      * @return float|null
      */
     public function calcProductPriceRule(Mage_Catalog_Model_Product $product, $price)
@@ -315,7 +377,7 @@ class Mage_CatalogRule_Model_Rule extends Mage_Rule_Model_Abstract
             if ($rulesData) {
                 foreach ($rulesData as $ruleData) {
                     if ($product->getParentId()) {
-                        if (!empty($ruleData['sub_simple_action'])) {
+                        if ($ruleData['sub_is_enable']) {
                             $priceRules = Mage::helper('catalogrule')->calcPriceRule(
                                 $ruleData['sub_simple_action'],
                                 $ruleData['sub_discount_amount'],
@@ -324,16 +386,16 @@ class Mage_CatalogRule_Model_Rule extends Mage_Rule_Model_Abstract
                         } else {
                             $priceRules = $price;
                         }
-                        if ($ruleData['action_stop']) {
+                        if ($ruleData['stop_rules_processing']) {
                             break;
                         }
                     } else {
                         $priceRules = Mage::helper('catalogrule')->calcPriceRule(
-                            $ruleData['action_operator'],
-                            $ruleData['action_amount'],
-                            $priceRules ? $priceRules : $price
+                            $ruleData['simple_action'],
+                            $ruleData['discount_amount'],
+                            $priceRules ? $priceRules :$price
                         );
-                        if ($ruleData['action_stop']) {
+                        if ($ruleData['stop_rules_processing']) {
                             break;
                         }
                     }
@@ -346,76 +408,5 @@ class Mage_CatalogRule_Model_Rule extends Mage_Rule_Model_Abstract
             return self::$_priceRulesData[$cacheKey];
         }
         return null;
-    }
-
-    /**
-     * Filtering products that must be checked for matching with rule
-     *
-     * @param  int|array $productIds
-     */
-    public function setProductsFilter($productIds)
-    {
-        $this->_productsFilter = $productIds;
-    }
-
-    /**
-     * Returns products filter
-     *
-     * @return array|int|null
-     */
-    public function getProductsFilter()
-    {
-        return $this->_productsFilter;
-    }
-
-    /**
-     * Invalidate related cache types
-     *
-     * @return Mage_CatalogRule_Model_Rule
-     */
-    protected function _invalidateCache()
-    {
-        $types = Mage::getConfig()->getNode(self::XML_NODE_RELATED_CACHE);
-        if ($types) {
-            $types = $types->asArray();
-            Mage::app()->getCacheInstance()->invalidateType(array_keys($types));
-        }
-        return $this;
-    }
-
-
-
-
-    /**
-     * @deprecated after 1.11.2.0
-     *
-     * @param string $format
-     *
-     * @return string
-     */
-    public function toString($format='')
-    {
-        return '';
-    }
-
-    /**
-     * Returns rule as an array for admin interface
-     *
-     * @deprecated after 1.11.2.0
-     *
-     * @param array $arrAttributes
-     *
-     * Output example:
-     * array(
-     *   'name'=>'Example rule',
-     *   'conditions'=>{condition_combine::toArray}
-     *   'actions'=>{action_collection::toArray}
-     * )
-     *
-     * @return array
-     */
-    public function toArray(array $arrAttributes = array())
-    {
-        return parent::toArray($arrAttributes);
     }
 }

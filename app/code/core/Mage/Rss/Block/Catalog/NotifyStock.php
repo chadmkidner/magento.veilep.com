@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Rss
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -64,7 +64,9 @@ class Mage_Rss_Block_Catalog_NotifyStock extends Mage_Rss_Block_Abstract
     protected function _toHtml()
     {
         $newUrl = Mage::getUrl('rss/catalog/notifystock');
-        $title = Mage::helper('rss')->__('Low Stock Products');
+        /* @var $helper Mage_Rss_Helper_Data */
+        $helper = Mage::helper('rss');
+        $title = $helper->__('Low Stock Products');
 
         $rssObj = Mage::getModel('rss/rss');
         $data = array(
@@ -79,7 +81,7 @@ class Mage_Rss_Block_Catalog_NotifyStock extends Mage_Rss_Block_Abstract
             Mage_CatalogInventory_Model_Stock_Item::XML_PATH_MANAGE_STOCK);
         $globalNotifyStockQty = (float) Mage::getStoreConfig(
             Mage_CatalogInventory_Model_Stock_Item::XML_PATH_NOTIFY_STOCK_QTY);
-        Mage::helper('rss')->disableFlat();
+        $helper->disableFlat();
         /* @var $product Mage_Catalog_Model_Product */
         $product = Mage::getModel('catalog/product');
         /* @var $collection Mage_Catalog_Model_Resource_Product_Collection */

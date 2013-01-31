@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Core
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -97,14 +97,9 @@ class Mage_Core_Model_Store extends Mage_Core_Model_Abstract
     const COOKIE_NAME                     = 'store';
 
     /**
-     * Cookie currency key
-     */
-    const COOKIE_CURRENCY                 = 'currency';
-
-    /**
      * Script name, which returns all the images
      */
-    const MEDIA_REWRITE_SCRIPT            = 'get.php/';
+    const MEDIA_REWRITE_SCRIPT          = 'get.php/';
 
     /**
      * Cache flag
@@ -450,7 +445,7 @@ class Mage_Core_Model_Store extends Mage_Core_Model_Abstract
             } elseif (strpos($sValue, '{{secure_base_url}}') !== false) {
                 $secureBaseUrl = $this->getConfig(self::XML_PATH_SECURE_BASE_URL);
                 $sValue = str_replace('{{secure_base_url}}', $secureBaseUrl, $sValue);
-            } elseif (strpos($sValue, '{{base_url}}') !== false) {
+            } elseif (strpos($sValue, '{{base_url}}') === false) {
                 $sValue = Mage::getConfig()->substDistroServerVars($sValue);
             }
         }
@@ -585,24 +580,9 @@ class Mage_Core_Model_Store extends Mage_Core_Model_Abstract
             || !$this->getConfig(self::XML_PATH_USE_REWRITES)
             || !Mage::isInstalled()
         ) {
-            if ($this->_isCustomEntryPoint()) {
-                $indexFileName = 'index.php';
-            } else {
-                $indexFileName = basename($_SERVER['SCRIPT_FILENAME']);
-            }
-            $url .= $indexFileName . '/';
+            $url .= basename($_SERVER['SCRIPT_FILENAME']) . '/';
         }
         return $url;
-    }
-
-    /**
-     * Check if used entry point is custom
-     *
-     * @return bool
-     */
-    protected function _isCustomEntryPoint()
-    {
-        return (bool)Mage::registry('custom_entry_point');
     }
 
     /**
@@ -689,7 +669,7 @@ class Mage_Core_Model_Store extends Mage_Core_Model_Abstract
     }
 
     /**
-     * Check if frontend URLs should be secure
+     * Check if forntend URLs should be secure
      *
      * @return boolean
      */
@@ -717,7 +697,13 @@ class Mage_Core_Model_Store extends Mage_Core_Model_Abstract
         }
 
         if (Mage::isInstalled()) {
-            $secureBaseUrl = Mage::getStoreConfig(Mage_Core_Model_Url::XML_PATH_SECURE_URL);
+            $secureBaseUrl = '';
+            if (!$this->isAdmin()) {
+                $secureBaseUrl = Mage::getStoreConfig(Mage_Core_Model_Url::XML_PATH_SECURE_URL);
+            } else {
+                $secureBaseUrl = (string) Mage::getConfig()
+                    ->getNode(Mage_Core_Model_Url::XML_PATH_SECURE_URL, 'default');
+            }
 
             if (!$secureBaseUrl) {
                 return false;
@@ -807,9 +793,9 @@ class Mage_Core_Model_Store extends Mage_Core_Model_Abstract
         if (in_array($code, $this->getAvailableCurrencyCodes())) {
             $this->_getSession()->setCurrencyCode($code);
             if ($code == $this->getDefaultCurrency()) {
-                Mage::app()->getCookie()->delete(self::COOKIE_CURRENCY, $code);
+                Mage::app()->getCookie()->delete('currency', $code);
             } else {
-                Mage::app()->getCookie()->set(self::COOKIE_CURRENCY, $code);
+                Mage::app()->getCookie()->set('currency', $code);
             }
         }
         return $this;

@@ -61,7 +61,7 @@ class Varien_Date
         'dd'   => '%d',
         'd'    => '%e',
         'yyyy' => '%Y',
-        'yy'   => '%Y',
+        'yy'   => '%y',
         'y'    => '%Y'
     );
     /**

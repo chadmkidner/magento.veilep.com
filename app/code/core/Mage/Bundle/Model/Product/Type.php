@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Bundle
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -535,9 +535,7 @@ class Mage_Bundle_Model_Product_Type extends Mage_Catalog_Model_Product_Type_Abs
         $selections = array();
         $product = $this->getProduct($product);
         $isStrictProcessMode = $this->_isStrictProcessMode($processMode);
-
-        $skipSaleableCheck = Mage::helper('catalog/product')->getSkipSaleableCheck();
-        $_appendAllSelections = (bool)$product->getSkipCheckRequiredOption() || $skipSaleableCheck;
+        $_appendAllSelections = (bool)$product->getSkipCheckRequiredOption();
 
         $options = $buyRequest->getBundleOption();
         if (is_array($options)) {
@@ -584,7 +582,7 @@ class Mage_Bundle_Model_Product_Type extends Mage_Catalog_Model_Product_Type_Abs
 
                 // Check if added selections are still on sale
                 foreach ($selections->getItems() as $key => $selection) {
-                    if (!$selection->isSalable() && !$skipSaleableCheck) {
+                    if (!$selection->isSalable()) {
                         $_option = $optionsCollection->getItemById($selection->getOptionId());
                         if (is_array($options[$_option->getId()]) && count($options[$_option->getId()]) > 1) {
                             $moreSelections = true;
@@ -660,7 +658,7 @@ class Mage_Bundle_Model_Product_Type extends Mage_Catalog_Model_Product_Type_Abs
                  * Create extra attributes that will be converted to product options in order item
                  * for selection (not for all bundle)
                  */
-                $price = $product->getPriceModel()->getSelectionFinalTotalPrice($product, $selection, 0, $qty);
+                $price = $product->getPriceModel()->getSelectionPrice($product, $selection, $qty);
                 $attributes = array(
                     'price'         => Mage::app()->getStore()->convertPrice($price),
                     'qty'           => $qty,
@@ -801,7 +799,9 @@ class Mage_Bundle_Model_Product_Type extends Mage_Catalog_Model_Product_Type_Abs
                 if ($selection->isSalable()) {
                     $selectionQty = $product->getCustomOption('selection_qty_' . $selection->getSelectionId());
                     if ($selectionQty) {
-                        $price = $product->getPriceModel()->getSelectionFinalTotalPrice($product, $selection, 0,
+                        $price = $product->getPriceModel()->getSelectionPrice(
+                            $product,
+                            $selection,
                             $selectionQty->getValue()
                         );
 
@@ -945,11 +945,10 @@ class Mage_Bundle_Model_Product_Type extends Mage_Catalog_Model_Product_Type_Abs
             Mage::throwException($this->getSpecifyOptionMessage());
         }
 
-        $skipSaleableCheck = Mage::helper('catalog/product')->getSkipSaleableCheck();
         foreach ($selectionIds as $selectionId) {
             /* @var $selection Mage_Bundle_Model_Selection */
             $selection = $productSelections->getItemById($selectionId);
-            if (!$selection || (!$selection->isSalable() && !$skipSaleableCheck)) {
+            if (!$selection || !$selection->isSalable()) {
                 Mage::throwException(
                     Mage::helper('bundle')->__('Selected required options are not available.')
                 );

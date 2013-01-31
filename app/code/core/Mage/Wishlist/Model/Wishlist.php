@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Wishlist
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -43,12 +43,6 @@
  */
 class Mage_Wishlist_Model_Wishlist extends Mage_Core_Model_Abstract
 {
-    /**
-     * Prefix of model events names
-     *
-     * @var string
-     */
-    protected $_eventPrefix = 'wishlist';
     /**
      * Wishlist item collection
      *
@@ -100,31 +94,6 @@ class Mage_Wishlist_Model_Wishlist extends Mage_Core_Model_Abstract
             $this->save();
         }
 
-        return $this;
-    }
-
-    /**
-     * Retrieve wishlist name
-     *
-     * @return string
-     */
-    public function getName()
-    {
-        $name = $this->_getData('name');
-        if (!strlen($name)) {
-            return Mage::helper('wishlist')->getDefaultWishlistName();
-        }
-        return $name;
-    }
-
-    /**
-     * Set random sharing code
-     *
-     * @return Mage_Wishlist_Model_Wishlist
-     */
-    public function generateSharingCode()
-    {
-        $this->setSharingCode($this->_getSharingRandomCode());
         return $this;
     }
 
@@ -211,9 +180,6 @@ class Mage_Wishlist_Model_Wishlist extends Mage_Core_Model_Abstract
                 ->setProduct($product)
                 ->setQty($qty)
                 ->save();
-            if ($item->getId()) {
-                $this->getItemCollection()->addItem($item);
-            }
         } else {
             $qty = $forciblySetQty ? $qty : $item->getQty() + $qty;
             $item->setQty($qty)
@@ -391,7 +357,7 @@ class Mage_Wishlist_Model_Wishlist extends Mage_Core_Model_Abstract
     /**
      * Retrieve customer id
      *
-     * @return int
+     * @return Mage_Wishlist_Model_Wishlist
      */
     public function getCustomerId()
     {
@@ -523,7 +489,7 @@ class Mage_Wishlist_Model_Wishlist extends Mage_Core_Model_Abstract
      *
      * For more options see Mage_Catalog_Helper_Product->addParamsToBuyRequest()
      *
-     * @param int|Mage_Wishlist_Model_Item $itemId
+     * @param int $itemId
      * @param Varien_Object $buyRequest
      * @param null|array|Varien_Object $params
      * @return Mage_Wishlist_Model_Wishlist
@@ -532,12 +498,7 @@ class Mage_Wishlist_Model_Wishlist extends Mage_Core_Model_Abstract
      */
     public function updateItem($itemId, $buyRequest, $params = null)
     {
-        $item = null;
-        if ($itemId instanceof Mage_Wishlist_Model_Item) {
-            $item = $itemId;
-        } else {
-            $item = $this->getItem((int)$itemId);
-        }
+        $item = $this->getItem((int)$itemId);
         if (!$item) {
             Mage::throwException(Mage::helper('wishlist')->__('Cannot specify wishlist item.'));
         }
@@ -587,16 +548,5 @@ class Mage_Wishlist_Model_Wishlist extends Mage_Core_Model_Abstract
             Mage::throwException(Mage::helper('checkout')->__('The product does not exist.'));
         }
         return $this;
-    }
-
-    /**
-     * Save wishlist.
-     *
-     * @return Mage_Wishlist_Model_Wishlist
-     */
-    public function save()
-    {
-        $this->_hasDataChanges = true;
-        return parent::save();
     }
 }

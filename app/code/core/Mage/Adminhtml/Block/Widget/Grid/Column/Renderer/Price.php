@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -29,10 +29,10 @@
  *
  * @category   Mage
  * @package    Mage_Adminhtml
- * @author     Magento Core Team <core@magentocommerce.com>
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Price
-    extends Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Abstract
+
+class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Price extends Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Abstract
 {
     protected $_defaultWidth = 100;
     /**
@@ -63,12 +63,6 @@ class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Price
         return $this->getColumn()->getDefault();
     }
 
-    /**
-     * Returns currency code for the row, false on error
-     *
-     * @param Varien_Object $row
-     * @return string|bool
-     */
     protected function _getCurrencyCode($row)
     {
         if ($code = $this->getColumn()->getCurrencyCode()) {
@@ -80,12 +74,6 @@ class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Price
         return false;
     }
 
-    /**
-     * Returns rate for the row, 1 by default
-     *
-     * @param Varien_Object $row
-     * @return float|int
-     */
     protected function _getRate($row)
     {
         if ($rate = $this->getColumn()->getRate()) {
@@ -97,11 +85,6 @@ class Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Price
         return 1;
     }
 
-    /**
-     * Renders CSS
-     *
-     * @return string
-     */
     public function renderCss()
     {
         return parent::renderCss() . ' a-right';

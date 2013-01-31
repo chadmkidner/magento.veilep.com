@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Core
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -332,11 +332,6 @@ abstract class Mage_Core_Model_Resource_Db_Abstract extends Mage_Core_Model_Reso
      */
     protected function _getReadAdapter()
     {
-        $writeAdapter = $this->_getWriteAdapter();
-        if ($writeAdapter && $writeAdapter->getTransactionLevel() > 0) {
-            // if transaction is started we should use write connection for reading
-            return $writeAdapter;
-        }
         return $this->_getConnection('read');
     }
 
@@ -624,7 +619,7 @@ abstract class Mage_Core_Model_Resource_Db_Abstract extends Mage_Core_Model_Reso
     /**
      * Check for unique values existence
      *
-     * @param Mage_Core_Model_Abstract $object
+     * @param Varien_Object $object
      * @return Mage_Core_Model_Resource_Db_Abstract
      * @throws Mage_Core_Exception
      */
@@ -656,7 +651,7 @@ abstract class Mage_Core_Model_Resource_Db_Abstract extends Mage_Core_Model_Reso
                     $select->where($unique['field'] . '=?', trim($data->getData($unique['field'])));
                 }
 
-                if ($object->getId() || $object->getId() === '0') {
+                if ($object->getId()) {
                     $select->where($this->getIdFieldName() . '!=?', $object->getId());
                 }
 

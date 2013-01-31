@@ -20,9 +20,10 @@
  *
  * @category    Mage
  * @package     Mage_Sales
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
+
 
 /**
  * Sales Order Pdf Items renderer Abstract
@@ -71,7 +72,7 @@ abstract class Mage_Sales_Model_Order_Pdf_Items_Abstract extends Mage_Core_Model
     /**
      * Set order model
      *
-     * @param  Mage_Sales_Model_Order $order
+     * @param Mage_Sales_Model_Order $order
      * @return Mage_Sales_Model_Order_Pdf_Items_Abstract
      */
     public function setOrder(Mage_Sales_Model_Order $order)
@@ -83,7 +84,7 @@ abstract class Mage_Sales_Model_Order_Pdf_Items_Abstract extends Mage_Core_Model
     /**
      * Set Source model
      *
-     * @param  Mage_Core_Model_Abstract $source
+     * @param Mage_Core_Model_Abstract $source
      * @return Mage_Sales_Model_Order_Pdf_Items_Abstract
      */
     public function setSource(Mage_Core_Model_Abstract $source)
@@ -95,7 +96,7 @@ abstract class Mage_Sales_Model_Order_Pdf_Items_Abstract extends Mage_Core_Model
     /**
      * Set item object
      *
-     * @param  Varien_Object $item
+     * @param Varien_Object $item
      * @return Mage_Sales_Model_Order_Pdf_Items_Abstract
      */
     public function setItem(Varien_Object $item)
@@ -107,7 +108,7 @@ abstract class Mage_Sales_Model_Order_Pdf_Items_Abstract extends Mage_Core_Model
     /**
      * Set Pdf model
      *
-     * @param  Mage_Sales_Model_Order_Pdf_Abstract $pdf
+     * @param Mage_Sales_Model_Order_Pdf_Abstract $pdf
      * @return Mage_Sales_Model_Order_Pdf_Items_Abstract
      */
     public function setPdf(Mage_Sales_Model_Order_Pdf_Abstract $pdf)
@@ -119,7 +120,7 @@ abstract class Mage_Sales_Model_Order_Pdf_Items_Abstract extends Mage_Core_Model
     /**
      * Set current page
      *
-     * @param  Zend_Pdf_Page $page
+     * @param Zend_Pdf_Page $page
      * @return Mage_Sales_Model_Order_Pdf_Items_Abstract
      */
     public function setPage(Zend_Pdf_Page $page)
@@ -204,12 +205,6 @@ abstract class Mage_Sales_Model_Order_Pdf_Items_Abstract extends Mage_Core_Model
      */
     abstract public function draw();
 
-    /**
-     * Format option value process
-     *
-     * @param  $value
-     * @return string
-     */
     protected function _formatOptionValue($value)
     {
         $order = $this->getOrder();
@@ -246,53 +241,6 @@ abstract class Mage_Sales_Model_Order_Pdf_Items_Abstract extends Mage_Core_Model
         return array($description);
     }
 
-    /**
-     * Get array of arrays with item prices information for display in PDF
-     * array(
-     *  $index => array(
-     *      'label'    => $label,
-     *      'price'    => $price,
-     *      'subtotal' => $subtotal
-     *  )
-     * )
-     * @return array
-     */
-    public function getItemPricesForDisplay()
-    {
-        $order = $this->getOrder();
-        $item  = $this->getItem();
-        if (Mage::helper('tax')->displaySalesBothPrices()) {
-            $prices = array(
-                array(
-                    'label'    => Mage::helper('tax')->__('Excl. Tax') . ':',
-                    'price'    => $order->formatPriceTxt($item->getPrice()),
-                    'subtotal' => $order->formatPriceTxt($item->getRowTotal())
-                ),
-                array(
-                    'label'    => Mage::helper('tax')->__('Incl. Tax') . ':',
-                    'price'    => $order->formatPriceTxt($item->getPriceInclTax()),
-                    'subtotal' => $order->formatPriceTxt($item->getRowTotalInclTax())
-                ),
-            );
-        } elseif (Mage::helper('tax')->displaySalesPriceInclTax()) {
-            $prices = array(array(
-                'price' => $order->formatPriceTxt($item->getPriceInclTax()),
-                'subtotal' => $order->formatPriceTxt($item->getRowTotalInclTax()),
-            ));
-        } else {
-            $prices = array(array(
-                'price' => $order->formatPriceTxt($item->getPrice()),
-                'subtotal' => $order->formatPriceTxt($item->getRowTotal()),
-            ));
-        }
-        return $prices;
-    }
-
-    /**
-     * Retrieve item options
-     *
-     * @return array
-     */
     public function getItemOptions() {
         $result = array();
         if ($options = $this->getItem()->getOrderItem()->getProductOptions()) {
@@ -309,25 +257,13 @@ abstract class Mage_Sales_Model_Order_Pdf_Items_Abstract extends Mage_Core_Model
         return $result;
     }
 
-    /**
-     * Set font as regular
-     *
-     * @param  int $size
-     * @return Zend_Pdf_Resource_Font
-     */
     protected function _setFontRegular($size = 7)
     {
-        $font = Zend_Pdf_Font::fontWithPath(Mage::getBaseDir() . '/lib/LinLibertineFont/LinLibertine_Re-4.4.1.ttf');
+        $font = Zend_Pdf_Font::fontWithPath(Mage::getBaseDir() . '/lib/LinLibertineFont/LinLibertineC_Re-2.8.0.ttf');
         $this->getPage()->setFont($font, $size);
         return $font;
     }
 
-    /**
-     * Set font as bold
-     *
-     * @param  int $size
-     * @return Zend_Pdf_Resource_Font
-     */
     protected function _setFontBold($size = 7)
     {
         $font = Zend_Pdf_Font::fontWithPath(Mage::getBaseDir() . '/lib/LinLibertineFont/LinLibertine_Bd-2.8.1.ttf');
@@ -335,12 +271,6 @@ abstract class Mage_Sales_Model_Order_Pdf_Items_Abstract extends Mage_Core_Model
         return $font;
     }
 
-    /**
-     * Set font as italic
-     *
-     * @param  int $size
-     * @return Zend_Pdf_Resource_Font
-     */
     protected function _setFontItalic($size = 7)
     {
         $font = Zend_Pdf_Font::fontWithPath(Mage::getBaseDir() . '/lib/LinLibertineFont/LinLibertine_It-2.8.2.ttf');
@@ -348,12 +278,6 @@ abstract class Mage_Sales_Model_Order_Pdf_Items_Abstract extends Mage_Core_Model
         return $font;
     }
 
-    /**
-     * Return item Sku
-     *
-     * @param  $item
-     * @return mixed
-     */
     public function getSku($item)
     {
         if ($item->getOrderItem()->getProductOptionByCode('simple_sku'))

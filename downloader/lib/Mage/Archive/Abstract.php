@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Archive
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -34,16 +34,14 @@
 class Mage_Archive_Abstract
 {
     /**
-     * Write data to file. If file can't be opened - throw exception
+     * Write data to file. If file can't be opened,
      *
      * @param string $destination
      * @param string $data
      * @return boolean
-     * @throws Mage_Exception
      */
     protected function _writeFile($destination, $data)
     {
-        $destination = trim($destination);
         if(false === file_put_contents($destination, $data)) {
             throw new Mage_Exception("Can't write to file: " . $destination);
         }
@@ -55,7 +53,6 @@ class Mage_Archive_Abstract
      *
      * @param string $source
      * @return string
-     * @throws Mage_Exception
      */
     protected function _readFile($source)
     {
@@ -73,8 +70,7 @@ class Mage_Archive_Abstract
      * Get file name from source (URI) without last extension.
      *
      * @param string $source
-     * @param bool $withExtension
-     * @return mixed|string
+     * @return string
      */
     public function getFilename($source, $withExtension=false)
     {
@@ -84,4 +80,5 @@ class Mage_Archive_Abstract
         }
         return $file;
     }
+
 }

@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -30,13 +30,12 @@
  * @author Magento Core Team <core@magentocommerce.com>
  */
 
-class Mage_Adminhtml_Block_Sales_Order_Create_Totals_Shipping
-    extends Mage_Adminhtml_Block_Sales_Order_Create_Totals_Default
+class Mage_Adminhtml_Block_Sales_Order_Create_Totals_Shipping extends Mage_Adminhtml_Block_Sales_Order_Create_Totals_Default
 {
     protected $_template = 'sales/order/create/totals/shipping.phtml';
 
     /**
-     * Check if we need display shipping include and exclude tax
+     * Check if we need display shipping include and exlude tax
      *
      * @return bool
      */
@@ -83,7 +82,7 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Totals_Shipping
      */
     public function getIncludeTaxLabel()
     {
-        return $this->helper('tax')->__('Shipping Incl. Tax (%s)', $this->escapeHtml($this->getTotal()->getAddress()->getShippingDescription()));
+        return $this->helper('tax')->__('Shipping Incl. Tax (%s)', $this->getTotal()->getAddress()->getShippingDescription());
     }
 
     /**
@@ -93,6 +92,6 @@ class Mage_Adminhtml_Block_Sales_Order_Create_Totals_Shipping
      */
     public function getExcludeTaxLabel()
     {
-        return $this->helper('tax')->__('Shipping Excl. Tax (%s)', $this->escapeHtml($this->getTotal()->getAddress()->getShippingDescription()));
+        return $this->helper('tax')->__('Shipping Excl. Tax (%s)', $this->getTotal()->getAddress()->getShippingDescription());
     }
 }

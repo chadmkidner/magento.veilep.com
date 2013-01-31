@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Sales
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -264,27 +264,24 @@ class Mage_Sales_Model_Order_Invoice_Item extends Mage_Core_Model_Abstract
      */
     public function calcRowTotal()
     {
-        $invoice        = $this->getInvoice();
+        $store          = $this->getInvoice()->getStore();
         $orderItem      = $this->getOrderItem();
         $orderItemQty   = $orderItem->getQtyOrdered();
 
-        $rowTotal            = $orderItem->getRowTotal() - $orderItem->getRowInvoiced();
-        $baseRowTotal        = $orderItem->getBaseRowTotal() - $orderItem->getBaseRowInvoiced();
-        $rowTotalInclTax     = $orderItem->getRowTotalInclTax();
-        $baseRowTotalInclTax = $orderItem->getBaseRowTotalInclTax();
+        $rowTotal       = $orderItem->getRowTotal();
+        $baseRowTotal   = $orderItem->getBaseRowTotal();
+        $rowTotalInclTax    = $orderItem->getRowTotalInclTax();
+        $baseRowTotalInclTax= $orderItem->getBaseRowTotalInclTax();
 
-        if (!$this->isLast()) {
-            $availableQty = $orderItemQty - $orderItem->getQtyInvoiced();
-            $rowTotal = $invoice->roundPrice($rowTotal / $availableQty * $this->getQty());
-            $baseRowTotal = $invoice->roundPrice($baseRowTotal / $availableQty * $this->getQty(), 'base');
-        }
+        $rowTotal       = $rowTotal/$orderItemQty*$this->getQty();
+        $baseRowTotal   = $baseRowTotal/$orderItemQty*$this->getQty();
 
-        $this->setRowTotal($rowTotal);
-        $this->setBaseRowTotal($baseRowTotal);
+        $this->setRowTotal($store->roundPrice($rowTotal));
+        $this->setBaseRowTotal($store->roundPrice($baseRowTotal));
 
         if ($rowTotalInclTax && $baseRowTotalInclTax) {
-            $this->setRowTotalInclTax($invoice->roundPrice($rowTotalInclTax / $orderItemQty * $this->getQty(), 'including'));
-            $this->setBaseRowTotalInclTax($invoice->roundPrice($baseRowTotalInclTax / $orderItemQty * $this->getQty(), 'including_base'));
+            $this->setRowTotalInclTax($store->roundPrice($rowTotalInclTax/$orderItemQty*$this->getQty()));
+            $this->setBaseRowTotalInclTax($store->roundPrice($baseRowTotalInclTax/$orderItemQty*$this->getQty()));
         }
         return $this;
     }

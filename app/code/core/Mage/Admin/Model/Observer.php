@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Admin
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -33,7 +33,6 @@
  */
 class Mage_Admin_Model_Observer
 {
-    const FLAG_NO_LOGIN = 'no-login';
     /**
      * Handler for controller_action_predispatch event
      *
@@ -52,8 +51,7 @@ class Mage_Admin_Model_Observer
             'forgotpassword',
             'resetpassword',
             'resetpasswordpost',
-            'logout',
-            'refresh' // captcha refresh
+            'logout'
         );
         if (in_array($requestedActionName, $openActions)) {
             $request->setDispatched(true);
@@ -66,7 +64,7 @@ class Mage_Admin_Model_Observer
                     $postLogin  = $request->getPost('login');
                     $username   = isset($postLogin['username']) ? $postLogin['username'] : '';
                     $password   = isset($postLogin['password']) ? $postLogin['password'] : '';
-                    $session->login($username, $password, $request);
+                    $user = $session->login($username, $password, $request);
                     $request->setPost('login', null);
                 }
                 if (!$request->getParam('forwarded')) {

@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Api
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -110,7 +110,7 @@ abstract class Mage_Api_Model_Server_Handler_Abstract
     /**
      *  Check session expiration
      *
-     *  @return  boolean
+     *  @return	  boolean
      */
     protected function _isSessionExpired ()
     {
@@ -210,14 +210,10 @@ abstract class Mage_Api_Model_Server_Handler_Abstract
      * @param string $apiKey
      * @return string
      */
-    public function login($username, $apiKey = null)
+    public function login($username, $apiKey)
     {
-        if (empty($username) || empty($apiKey)) {
-            return $this->_fault('invalid_request_param');
-        }
-
+        $this->_startSession();
         try {
-            $this->_startSession();
             $this->_getSession()->login($username, $apiKey);
         } catch (Exception $e) {
             return $this->_fault('access_denied');
@@ -229,7 +225,7 @@ abstract class Mage_Api_Model_Server_Handler_Abstract
      * Call resource functionality
      *
      * @param string $sessionId
-     * @param string $apiPath
+     * @param string $resourcePath
      * @param array  $args
      * @return mixed
      */

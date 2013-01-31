@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -174,13 +174,6 @@ class Mage_Adminhtml_Block_Widget_Grid extends Mage_Adminhtml_Block_Widget
      * @var string
      */
     protected $_massactionIdField = null;
-
-    /**
-     * Massaction row id filter
-     *
-     * @var string
-     */
-    protected $_massactionIdFilter = null;
 
     /**
      * Massaction block name
@@ -550,8 +543,8 @@ class Mage_Adminhtml_Block_Widget_Grid extends Mage_Adminhtml_Block_Widget
 
     protected function _preparePage()
     {
-        $this->getCollection()->setPageSize((int) $this->getParam($this->getVarNameLimit(), $this->_defaultLimit));
-        $this->getCollection()->setCurPage((int) $this->getParam($this->getVarNamePage(), $this->_defaultPage));
+        $this->getCollection()->setPageSize($this->getParam($this->getVarNameLimit(), $this->_defaultLimit));
+        $this->getCollection()->setCurPage($this->getParam($this->getVarNamePage(), $this->_defaultPage));
     }
 
     protected function _prepareColumns()
@@ -596,12 +589,11 @@ class Mage_Adminhtml_Block_Widget_Grid extends Mage_Adminhtml_Block_Widget
         $columnId = 'massaction';
         $massactionColumn = $this->getLayout()->createBlock('adminhtml/widget_grid_column')
                 ->setData(array(
-                    'index'        => $this->getMassactionIdField(),
-                    'filter_index' => $this->getMassactionIdFilter(),
-                    'type'         => 'massaction',
-                    'name'         => $this->getMassactionBlock()->getFormFieldName(),
-                    'align'        => 'center',
-                    'is_system'    => true
+                    'index'     => $this->getMassactionIdField(),
+                    'type'      => 'massaction',
+                    'name'      => $this->getMassactionBlock()->getFormFieldName(),
+                    'align'     => 'center',
+                    'is_system' => true
                 ));
 
         if ($this->getNoFilterMassactionColumn()) {
@@ -801,7 +793,7 @@ class Mage_Adminhtml_Block_Widget_Grid extends Mage_Adminhtml_Block_Widget
     /**
      * Retrieve grid export types
      *
-     * @return array|false
+     * @return array
      */
     public function getExportTypes()
     {
@@ -1295,7 +1287,7 @@ class Mage_Adminhtml_Block_Widget_Grid extends Mage_Adminhtml_Block_Widget
     }
 
     /**
-     * Retrieve massaction row identifier field
+     * Retrive massaction row identifier field
      *
      * @return string
      */
@@ -1313,28 +1305,6 @@ class Mage_Adminhtml_Block_Widget_Grid extends Mage_Adminhtml_Block_Widget
     public function setMassactionIdField($idField)
     {
         $this->_massactionIdField = $idField;
-        return $this;
-    }
-
-    /**
-     * Retrieve massaction row identifier filter
-     *
-     * @return string
-     */
-    public function getMassactionIdFilter()
-    {
-        return $this->_massactionIdFilter;
-    }
-
-    /**
-     * Set massaction row identifier filter
-     *
-     * @param string $idFilter
-     * @return Mage_Adminhtml_Block_Widget_Grid
-     */
-    public function setMassactionIdFilter($idFilter)
-    {
-        $this->_massactionIdFilter = $idFilter;
         return $this;
     }
 

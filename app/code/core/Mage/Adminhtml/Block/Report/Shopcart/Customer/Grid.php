@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -31,7 +31,7 @@
  * @package    Mage_Adminhtml
  * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Adminhtml_Block_Report_Shopcart_Customer_Grid extends Mage_Adminhtml_Block_Report_Grid_Shopcart
+class Mage_Adminhtml_Block_Report_Shopcart_Customer_Grid extends Mage_Adminhtml_Block_Widget_Grid
 {
 
     public function __construct()
@@ -83,18 +83,15 @@ class Mage_Adminhtml_Block_Report_Shopcart_Customer_Grid extends Mage_Adminhtml_
             'index'     =>'items'
         ));
 
-        $currencyCode = $this->getCurrentCurrencyCode();
-
         $this->addColumn('total', array(
             'header'    =>Mage::helper('reports')->__('Total'),
             'width'     =>'70px',
             'sortable'  =>false,
             'type'      =>'currency',
             'align'     =>'right',
-            'currency_code' => $currencyCode,
+            'currency_code' => $this->getCurrentCurrencyCode(),
             'index'     =>'total',
-            'renderer'  =>'adminhtml/report_grid_column_renderer_currency',
-            'rate'          => $this->getRate($currencyCode),
+            'renderer'  =>'adminhtml/report_grid_column_renderer_currency'
         ));
 
         $this->setFilterVisibility(false);
@@ -106,3 +103,4 @@ class Mage_Adminhtml_Block_Report_Shopcart_Customer_Grid extends Mage_Adminhtml_
     }
 
 }
+

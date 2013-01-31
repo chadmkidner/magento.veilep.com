@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Wishlist
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -34,16 +34,6 @@
  */
 class Mage_Wishlist_Block_Customer_Sidebar extends Mage_Wishlist_Block_Abstract
 {
-    /**
-     * Retrieve block title
-     *
-     * @return string
-     */
-    public function getTitle()
-    {
-        return $this->__('My Wishlist <small>(%d)</small>', $this->getItemCount());
-    }
-
     /**
      * Add sidebar conditions to collection
      *
@@ -67,7 +57,7 @@ class Mage_Wishlist_Block_Customer_Sidebar extends Mage_Wishlist_Block_Abstract
      */
     protected function _toHtml()
     {
-        if ($this->getItemCount()) {
+        if (($this->getCustomWishlist() && $this->getItemCount()) || $this->hasWishlistItems()) {
             return parent::_toHtml();
         }
 
@@ -77,7 +67,6 @@ class Mage_Wishlist_Block_Customer_Sidebar extends Mage_Wishlist_Block_Abstract
     /**
      * Can Display wishlist
      *
-     * @deprecated after 1.6.2.0
      * @return bool
      */
     public function getCanDisplayWishlist()
@@ -110,19 +99,19 @@ class Mage_Wishlist_Block_Customer_Sidebar extends Mage_Wishlist_Block_Abstract
     }
 
     /**
-     * Retrieve Wishlist Product Items collection
+     * Retrieve Wishlist model
      *
-     * @return Mage_Wishlist_Model_Resource_Item_Collection
+     * @return Mage_Wishlist_Model_Wishlist
      */
-    public function getWishlistItems()
+    protected function _getWishlist()
     {
-        if (is_null($this->_collection)) {
-            $this->_collection = clone $this->_createWishlistItemCollection();
-            $this->_collection->clear();
-            $this->_prepareCollection($this->_collection);
+
+        if (!$this->getCustomWishlist() || !is_null($this->_wishlist)) {
+            return parent::_getWishlist();
         }
 
-        return $this->_collection;
+        $this->_wishlist = $this->getCustomWishlist();
+        return $this->_wishlist;
     }
 
     /**
@@ -132,16 +121,10 @@ class Mage_Wishlist_Block_Customer_Sidebar extends Mage_Wishlist_Block_Abstract
      */
     public function getItemCount()
     {
-        return $this->_getHelper()->getItemCount();
-    }
+        if ($this->getCustomWishlist()) {
+            return $this->getCustomWishlist()->getItemsCount();
+        }
 
-    /**
-     * Check whether user has items in his wishlist
-     *
-     * @return bool
-     */
-    public function hasWishlistItems()
-    {
-        return $this->getItemCount() > 0;
+        return $this->getWishlistItemsCount();
     }
 }

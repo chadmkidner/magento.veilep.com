@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_CatalogInventory
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -256,28 +256,7 @@ class Mage_CatalogInventory_Model_Observer
         }
 
         $quote = $item->getQuote();
-        $quoteItems = $quote->getItemsCollection();
-        $canRemoveErrorFromQuote = true;
-
-        foreach ($quoteItems as $quoteItem) {
-            if ($quoteItem->getItemId() == $item->getItemId()) {
-                continue;
-            }
-
-            $errorInfos = $quoteItem->getErrorInfos();
-            foreach ($errorInfos as $errorInfo) {
-                if ($errorInfo['code'] == $code) {
-                    $canRemoveErrorFromQuote = false;
-                    break;
-                }
-            }
-
-            if (!$canRemoveErrorFromQuote) {
-                break;
-            }
-        }
-
-        if ($quote->getHasError() && $canRemoveErrorFromQuote) {
+        if ($quote->getHasError()) {
             $params = array(
                 'origin' => 'cataloginventory',
                 'code' => $code
@@ -347,11 +326,6 @@ class Mage_CatalogInventory_Model_Observer
                 $increaseOptionQty = ($quoteItem->getQtyToAdd() ? $quoteItem->getQtyToAdd() : $qty) * $optionValue;
 
                 $stockItem = $option->getProduct()->getStockItem();
-
-                if ($quoteItem->getProductType() == Mage_Catalog_Model_Product_Type::TYPE_CONFIGURABLE) {
-                    $stockItem->setProductName($quoteItem->getName());
-                }
-
                 /* @var $stockItem Mage_CatalogInventory_Model_Stock_Item */
                 if (!$stockItem instanceof Mage_CatalogInventory_Model_Stock_Item) {
                     Mage::throwException(
@@ -391,7 +365,6 @@ class Mage_CatalogInventory_Model_Observer
                 }
                 if (!is_null($result->getMessage())) {
                     $option->setMessage($result->getMessage());
-                    $quoteItem->setMessage($result->getMessage());
                 }
                 if (!is_null($result->getItemBackorders())) {
                     $option->setBackorders($result->getItemBackorders());
@@ -727,11 +700,9 @@ class Mage_CatalogInventory_Model_Observer
      */
     public function refundOrderInventory($observer)
     {
-        /* @var $creditmemo Mage_Sales_Model_Order_Creditmemo */
         $creditmemo = $observer->getEvent()->getCreditmemo();
         $items = array();
         foreach ($creditmemo->getAllItems() as $item) {
-            /* @var $item Mage_Sales_Model_Order_Creditmemo_Item */
             $return = false;
             if ($item->hasBackToStock()) {
                 if ($item->getBackToStock() && $item->getQty()) {
@@ -741,15 +712,11 @@ class Mage_CatalogInventory_Model_Observer
                 $return = true;
             }
             if ($return) {
-                $parentOrderId = $item->getOrderItem()->getParentItemId();
-                /* @var $parentItem Mage_Sales_Model_Order_Creditmemo_Item */
-                $parentItem = $parentOrderId ? $creditmemo->getItemByOrderId($parentOrderId) : false;
-                $qty = $parentItem ? ($parentItem->getQty() * $item->getQty()) : $item->getQty();
                 if (isset($items[$item->getProductId()])) {
-                    $items[$item->getProductId()]['qty'] += $qty;
+                    $items[$item->getProductId()]['qty'] += $item->getQty();
                 } else {
                     $items[$item->getProductId()] = array(
-                        'qty' => $qty,
+                        'qty' => $item->getQty(),
                         'item'=> null,
                     );
                 }

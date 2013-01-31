@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Adminhtml
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -86,7 +86,7 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
     public function gridAction()
     {
         $this->loadLayout();
-        $this->renderLayout();
+        $this->getResponse()->setBody($this->getLayout()->createBlock('adminhtml/customer_grid')->toHtml());
     }
 
     /**
@@ -186,27 +186,21 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
     {
         $data = $this->getRequest()->getPost();
         if ($data) {
-            $redirectBack = $this->getRequest()->getParam('back', false);
+            $redirectBack   = $this->getRequest()->getParam('back', false);
             $this->_initCustomer('customer_id');
 
-            /** @var $customer Mage_Customer_Model_Customer */
+            /* @var $customer Mage_Customer_Model_Customer */
             $customer = Mage::registry('current_customer');
 
-            /** @var $customerForm Mage_Customer_Model_Form */
+            /* @var $customerForm Mage_Customer_Model_Form */
             $customerForm = Mage::getModel('customer/form');
             $customerForm->setEntity($customer)
                 ->setFormCode('adminhtml_customer')
                 ->ignoreInvisible(false)
             ;
 
-            $formData = $customerForm->extractData($this->getRequest(), 'account');
-
-            // Handle 'disable auto_group_change' attribute
-            if (isset($formData['disable_auto_group_change'])) {
-                $formData['disable_auto_group_change'] = empty($formData['disable_auto_group_change']) ? '0' : '1';
-            }
-
-            $errors = $customerForm->validateData($formData);
+            $formData   = $customerForm->extractData($this->getRequest(), 'account');
+            $errors     = $customerForm->validateData($formData);
             if ($errors !== true) {
                 foreach ($errors as $error) {
                     $this->_getSession()->addError($error);
@@ -218,36 +212,27 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
 
             $customerForm->compactData($formData);
 
-            // Unset template data
+            // unset template data
             if (isset($data['address']['_template_'])) {
                 unset($data['address']['_template_']);
             }
 
             $modifiedAddresses = array();
             if (!empty($data['address'])) {
-                /** @var $addressForm Mage_Customer_Model_Form */
+                /* @var $addressForm Mage_Customer_Model_Form */
                 $addressForm = Mage::getModel('customer/form');
                 $addressForm->setFormCode('adminhtml_customer_address')->ignoreInvisible(false);
 
                 foreach (array_keys($data['address']) as $index) {
                     $address = $customer->getAddressItemById($index);
                     if (!$address) {
-                        $address = Mage::getModel('customer/address');
+                        $address   = Mage::getModel('customer/address');
                     }
 
                     $requestScope = sprintf('address/%s', $index);
                     $formData = $addressForm->setEntity($address)
                         ->extractData($this->getRequest(), $requestScope);
-
-                    // Set default billing and shipping flags to address
-                    $isDefaultBilling = isset($data['account']['default_billing'])
-                        && $data['account']['default_billing'] == $index;
-                    $address->setIsDefaultBilling($isDefaultBilling);
-                    $isDefaultShipping = isset($data['account']['default_shipping'])
-                        && $data['account']['default_shipping'] == $index;
-                    $address->setIsDefaultShipping($isDefaultShipping);
-
-                    $errors = $addressForm->validateData($formData);
+                    $errors   = $addressForm->validateData($formData);
                     if ($errors !== true) {
                         foreach ($errors as $error) {
                             $this->_getSession()->addError($error);
@@ -272,7 +257,7 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
                 }
             }
 
-            // Default billing and shipping
+            // default billing and shipping
             if (isset($data['account']['default_billing'])) {
                 $customer->setData('default_billing', $data['account']['default_billing']);
             }
@@ -283,15 +268,17 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
                 $customer->setData('confirmation', $data['account']['confirmation']);
             }
 
-            // Mark not modified customer addresses for delete
+            // not modified customer addresses mark for delete
             foreach ($customer->getAddressesCollection() as $customerAddress) {
                 if ($customerAddress->getId() && !in_array($customerAddress->getId(), $modifiedAddresses)) {
                     $customerAddress->setData('_deleted', true);
                 }
             }
 
-            if (Mage::getSingleton('admin/session')->isAllowed('customer/newsletter')) {
-                $customer->setIsSubscribed(isset($data['subscription']));
+            if (isset($data['subscription'])) {
+                $customer->setIsSubscribed(true);
+            } else {
+                $customer->setIsSubscribed(false);
             }
 
             if (isset($data['account']['sendemail_store_id'])) {
@@ -301,7 +288,7 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
             $isNewCustomer = $customer->isObjectNew();
             try {
                 $sendPassToEmail = false;
-                // Force new customer confirmation
+                // force new customer active
                 if ($isNewCustomer) {
                     $customer->setPassword($data['account']['password']);
                     $customer->setForceConfirmed(true);
@@ -318,13 +305,14 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
 
                 $customer->save();
 
-                // Send welcome email
+                // send welcome email
                 if ($customer->getWebsiteId() && (isset($data['account']['sendemail']) || $sendPassToEmail)) {
                     $storeId = $customer->getSendemailStoreId();
                     if ($isNewCustomer) {
                         $customer->sendNewAccountEmail('registered', '', $storeId);
-                    } elseif ((!$customer->getConfirmation())) {
-                        // Confirm not confirmed customer
+                    }
+                    // confirm not confirmed customer
+                    else if ((!$customer->getConfirmation())) {
                         $customer->sendNewAccountEmail('confirmed', '', $storeId);
                     }
                 }
@@ -348,8 +336,8 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
 
                 if ($redirectBack) {
                     $this->_redirect('*/*/edit', array(
-                        'id' => $customer->getId(),
-                        '_current' => true
+                        'id'    => $customer->getId(),
+                        '_current'=>true
                     ));
                     return;
                 }
@@ -413,8 +401,7 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
      */
     public function ordersAction() {
         $this->_initCustomer();
-        $this->loadLayout();
-        $this->renderLayout();
+        $this->getResponse()->setBody($this->getLayout()->createBlock('adminhtml/customer_edit_tab_orders')->toHtml());
     }
 
     /**
@@ -423,8 +410,8 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
      */
     public function lastOrdersAction() {
         $this->_initCustomer();
-        $this->loadLayout();
-        $this->renderLayout();
+        $this->getResponse()->setBody(
+            $this->getLayout()->createBlock('adminhtml/customer_edit_tab_view_orders')->toHtml());
     }
 
     /**
@@ -438,8 +425,8 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
             ->loadByCustomer(Mage::registry('current_customer'));
 
         Mage::register('subscriber', $subscriber);
-        $this->loadLayout();
-        $this->renderLayout();
+        $this->getResponse()->setBody(
+            $this->getLayout()->createBlock('adminhtml/customer_edit_tab_newsletter_grid')->toHtml());
     }
 
     public function wishlistAction()
@@ -472,8 +459,8 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
     public function viewWishlistAction()
     {
         $this->_initCustomer();
-        $this->loadLayout();
-        $this->renderLayout();
+        $this->getResponse()->setBody(
+            $this->getLayout()->createBlock('adminhtml/customer_edit_tab_view_wishlist')->toHtml());
     }
 
     /**
@@ -499,9 +486,10 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
             }
         }
 
-        $this->loadLayout();
-        $this->getLayout()->getBlock('admin.customer.view.edit.cart')->setWebsiteId($websiteId);
-        $this->renderLayout();
+        $this->getResponse()->setBody(
+            $this->getLayout()->createBlock('adminhtml/customer_edit_tab_cart', 'admin.customer.view.cart',
+                array('website_id'=>$websiteId))->toHtml()
+        );
     }
 
     /**
@@ -511,62 +499,57 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
     public function viewCartAction()
     {
         $this->_initCustomer();
-        $layout = $this->loadLayout()
-            ->getLayout()
-            ->getBlock('admin.customer.view.cart')
-            ->setWebsiteId();
-        $this->renderLayout();
+
+        $this->getResponse()->setBody(
+            $this->getLayout()->createBlock('adminhtml/customer_edit_tab_view_cart', 'admin.customer.view.cart')
+                ->setWebsiteId($this->getRequest()->getParam('website_id'))
+                ->toHtml()
+        );
     }
 
     /**
      * Get shopping carts from all websites for specified client
      *
+     * @return string
      */
     public function cartsAction()
     {
         $this->_initCustomer();
-        $this->loadLayout();
-        $this->renderLayout();
+        $this->getResponse()->setBody(
+            $this->getLayout()->createBlock('adminhtml/customer_edit_tab_carts', 'admin.customer.carts')->toHtml()
+        );
     }
 
-    /**
-     * Get customer's product reviews list
-     *
-     */
     public function productReviewsAction()
     {
         $this->_initCustomer();
-        $this->loadLayout()
-            ->getLayout()
-            ->getBlock('admin.customer.reviews')
-            ->setCustomerId(Mage::registry('current_customer')->getId())
-            ->setUseAjax(true);
-        $this->renderLayout();
+        $this->getResponse()->setBody(
+            $this->getLayout()->createBlock('adminhtml/customer_edit_tab_reviews', 'admin.customer.reviews')
+                ->setCustomerId(Mage::registry('current_customer')->getId())
+                ->setUseAjax(true)
+                ->toHtml()
+        );
     }
 
-    /**
-     * Get customer's tags list
-     *
-     */
     public function productTagsAction()
     {
         $this->_initCustomer();
-        $this->loadLayout()
-            ->getLayout()
-            ->getBlock('admin.customer.tags')
-            ->setCustomerId(Mage::registry('current_customer')->getId())
-            ->setUseAjax(true);
-        $this->renderLayout();
+        $this->getResponse()->setBody(
+            $this->getLayout()->createBlock('adminhtml/customer_edit_tab_tag', 'admin.customer.tags')
+                ->setCustomerId(Mage::registry('current_customer')->getId())
+                ->setUseAjax(true)
+                ->toHtml()
+        );
     }
 
     public function tagGridAction()
     {
         $this->_initCustomer();
-        $this->loadLayout();
-        $this->getLayout()->getBlock('admin.customer.tags')->setCustomerId(
-            Mage::registry('current_customer')
+        $this->getResponse()->setBody(
+            $this->getLayout()->createBlock('adminhtml/customer_edit_tab_tag', 'admin.customer.tags')
+                ->setCustomerId(Mage::registry('current_customer'))
+                ->toHtml()
         );
-        $this->renderLayout();
     }
 
     public function validateAction()
@@ -667,7 +650,9 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
                     $customer->save();
                 }
                 Mage::getSingleton('adminhtml/session')->addSuccess(
-                    Mage::helper('adminhtml')->__('Total of %d record(s) were updated.', count($customersIds))
+                    Mage::helper('adminhtml')->__(
+                        'Total of %d record(s) were updated.', count($customersIds)
+                    )
                 );
             } catch (Exception $e) {
                 Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
@@ -689,7 +674,9 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
                     $customer->save();
                 }
                 Mage::getSingleton('adminhtml/session')->addSuccess(
-                    Mage::helper('adminhtml')->__('Total of %d record(s) were updated.', count($customersIds))
+                    Mage::helper('adminhtml')->__(
+                        'Total of %d record(s) were updated.', count($customersIds)
+                    )
                 );
             } catch (Exception $e) {
                 Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
@@ -713,7 +700,9 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
                         ->delete();
                 }
                 Mage::getSingleton('adminhtml/session')->addSuccess(
-                    Mage::helper('adminhtml')->__('Total of %d record(s) were deleted.', count($customersIds))
+                    Mage::helper('adminhtml')->__(
+                        'Total of %d record(s) were deleted.', count($customersIds)
+                    )
                 );
             } catch (Exception $e) {
                 Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
@@ -736,7 +725,9 @@ class Mage_Adminhtml_CustomerController extends Mage_Adminhtml_Controller_Action
                     $customer->save();
                 }
                 Mage::getSingleton('adminhtml/session')->addSuccess(
-                    Mage::helper('adminhtml')->__('Total of %d record(s) were updated.', count($customersIds))
+                    Mage::helper('adminhtml')->__(
+                        'Total of %d record(s) were updated.', count($customersIds)
+                    )
                 );
             } catch (Exception $e) {
                 Mage::getSingleton('adminhtml/session')->addError($e->getMessage());

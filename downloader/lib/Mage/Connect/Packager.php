@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Connect
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -261,7 +261,7 @@ class Mage_Connect_Packager
         $contents = $package->getContents();
 
         $targetPath = rtrim($configObj->magento_root, "\\/");
-        foreach ($contents as $file) {
+        foreach($contents as $file) {
             $fileName = basename($file);
             $filePath = dirname($file);
             $dest = $targetPath . DIRECTORY_SEPARATOR . $filePath . DIRECTORY_SEPARATOR . $fileName;
@@ -290,7 +290,7 @@ class Mage_Connect_Packager
         $ftpDir = $ftp->getcwd();
         $package = $cacheObj->getPackageObject($chanName, $package);
         $contents = $package->getContents();
-        foreach ($contents as $file) {
+        foreach($contents as $file) {
             $ftp->delete($file);
             $this->removeEmptyDirectory(dirname($file), $ftp);
         }
@@ -317,7 +317,7 @@ class Mage_Connect_Packager
     /**
      * Return correct global dir mode in octal representation
      *
-     * @param Mage_Connect_Config $config
+     * @param Maged_Model_Config $config
      * @return int
      */
     protected function _getDirMode($config)
@@ -332,7 +332,7 @@ class Mage_Connect_Packager
     /**
      * Return global file mode in octal representation
      *
-     * @param Mage_Connect_Config $config
+     * @param Maged_Model_Config $config
      * @return int
      */
     protected function _getFileMode($config)
@@ -360,7 +360,7 @@ class Mage_Connect_Packager
      *
      * @param Mage_Connect_Package $package
      * @param string $file
-     * @param Mage_Connect_Config $configObj
+     * @param Maged_Model_Config $configObj
      * @param Mage_Connect_Ftp $ftp
      * @return void
      */
@@ -369,13 +369,13 @@ class Mage_Connect_Packager
         $ftpDir = $ftp->getcwd();
         $contents = $package->getContents();
         $arc = $this->getArchiver();
-        $target = dirname($file) . DS . $package->getReleaseFilename();
+        $target = dirname($file).DS.$package->getReleaseFilename();
         @mkdir($target, 0777, true);
         $tar = $arc->unpack($file, $target);
         $modeFile = $this->_getFileMode($configObj);
         $modeDir = $this->_getDirMode($configObj);
-        foreach ($contents as $file) {
-            $source = $tar . DS . $file;
+        foreach($contents as $file) {
+            $source = $tar.DS.$file;
             if (file_exists($source) && is_file($source)) {
                 $args = array(ltrim($file,"/"), $source);
                 if($modeDir||$modeFile) {
@@ -401,23 +401,23 @@ class Mage_Connect_Packager
      *
      * @param Mage_Connect_Package $package
      * @param string $file
-     * @param Mage_Connect_Config $configObj
      * @return void
+     * @throws Exception
      */
     public function processInstallPackage($package, $file, $configObj)
     {
         $contents = $package->getContents();
         $arc = $this->getArchiver();
-        $target = dirname($file) . DS . $package->getReleaseFilename();
+        $target = dirname($file).DS.$package->getReleaseFilename();
         @mkdir($target, 0777, true);
         $tar = $arc->unpack($file, $target);
         $modeFile = $this->_getFileMode($configObj);
         $modeDir = $this->_getDirMode($configObj);
         $targetPath = rtrim($configObj->magento_root, "\\/");
-        foreach ($contents as $file) {
+        foreach($contents as $file) {
             $fileName = basename($file);
             $filePath = dirname($file);
-            $source = $tar . DS . $file;
+            $source = $tar.DS.$file;
             @mkdir($targetPath. DS . $filePath, $modeDir, true);
             $dest = $targetPath . DS . $filePath . DS . $fileName;
             if (is_file($source)) {
@@ -496,9 +496,8 @@ class Mage_Connect_Packager
     /**
      * Get upgrades list
      *
-     * @param string|array $channels
+     * @param string/array $channels
      * @param Mage_Connect_Singleconfig $cacheObject
-     * @param Mage_Connect_Config $configObj
      * @param Mage_Connect_Rest $restObj optional
      * @param bool $checkConflicts
      * @return array
@@ -514,7 +513,7 @@ class Mage_Connect_Packager
         }
 
         $updates = array();
-        foreach ($channels as $chan) {
+        foreach($channels as $chan) {
 
             if(!$cacheObject->isChannel($chan)) {
                 continue;
@@ -537,14 +536,14 @@ class Mage_Connect_Packager
              */
             $state = $configObj->preferred_state ? $configObj->preferred_state : "stable";
 
-            foreach ($localPackages as $localName=>$localData) {
+            foreach($localPackages as $localName=>$localData) {
                 if(!isset($remotePackages[$localName])) {
                     continue;
                 }
                 $package = $remotePackages[$localName];
                 $neededToUpgrade = false;
                 $remoteVersion = $localVersion = trim($localData[Mage_Connect_Singleconfig::K_VER]);
-                foreach ($package as $version => $s) {
+                foreach($package as $version => $s) {
 
                     if($cacheObject->compareStabilities($s, $state) < 0) {
                         continue;
@@ -582,7 +581,7 @@ class Mage_Connect_Packager
      * @param Mage_Connect_Singleconfig $cache
      * @param Mage_Connect_Config $config
      * @param bool $withDepsRecursive
-     * @return array|null
+     * @return array
      */
     public function getUninstallList($chanName, $package, $cache, $config, $withDepsRecursive = true)
     {
@@ -600,7 +599,7 @@ class Mage_Connect_Packager
                     $hash = array();
                     return array('list'=>array());
                 }
-                return null;
+                return;
             }
             $dependencies = $cache->getPackageDependencies($chanName, $package);
             $data = $cache->getPackage($chanName, $package);
@@ -615,14 +614,14 @@ class Mage_Connect_Packager
 
             if($withDepsRecursive) {
                 $fields = array('name','channel','min','max');
-                foreach ($dependencies as $row) {
+                foreach($dependencies as $row) {
                     /**
                      * Converts an array to variables
                      * @var $pChannel string Channel Name
                      * @var $pName string Package Name
                      */
-                    foreach ($fields as $key) {
-                        $varName = "p" . ucfirst($key);
+                    foreach($fields as $key) {
+                        $varName = "p".ucfirst($key);
                         $$varName = $row[$key];
                     }
                     $method = __FUNCTION__;
@@ -643,8 +642,6 @@ class Mage_Connect_Packager
             $hash = array();
             return array('list'=>$out);
         }
-
-        return null;
     }
 
     /**
@@ -659,7 +656,7 @@ class Mage_Connect_Packager
      * @param string $versionMax Required package maximum version
      * @param string $installState Package install state
      * @param string $message Package install message
-     * @param array|string $dependencies Package dependencies
+     * @param array $dependencies Package dependencies
      * @return bool
      */
     private function addHashData(&$hash, $name, $channel, $downloaded_version = '', $stability = '', $versionMin = '',
@@ -680,7 +677,7 @@ class Mage_Connect_Packager
                 'max' => $versionMax,
                 'install_state' => $installState,
                 'message' => (isset($this->installStates[$installState]) ?
-                        $this->installStates[$installState] : '') . $message,
+                        $this->installStates[$installState] : '').$message,
                 'packages' => $dependencies,
             );
             return true;
@@ -716,7 +713,7 @@ class Mage_Connect_Packager
         try {
             $chanName = $cache->chanName($chanName);
 
-            if (!$rest) {
+            if (!$rest){
                 $rest = new Mage_Connect_Rest($config->protocol);
             }
             $rest->setChannel($cache->chanUrl($chanName));
@@ -742,7 +739,6 @@ class Mage_Connect_Packager
             if (!$version) {
                 $versionState = $cache->detectVersionFromRestArray($releases, $versionMin, $versionMax);
                 if ($versionState) {
-                    /** @var $packageInfo Mage_Connect_Package */
                     $packageInfo = $rest->getPackageReleaseInfo($package, $versionState);
                     if (false !== $packageInfo) {
                         $stability = $packageInfo->getStability();
@@ -762,7 +758,7 @@ class Mage_Connect_Packager
              * check is package already installed
              */
             if ($installedPackage = $cache->isPackageInstalled($package)) {
-                if ($chanName == $installedPackage['channel']) {
+                if ($chanName == $installedPackage['channel']){
                     /**
                      * check versions
                      */
@@ -812,7 +808,7 @@ class Mage_Connect_Packager
 
             if ($withDepsRecursive && self::INSTALL_STATE_INCOMPATIBLE != $install_state) {
                 $flds = array('name','channel','min','max');
-                foreach ($dependencies as $row) {
+                foreach($dependencies as $row) {
                     /**
                      * Converts an array to variables
                      * @var $pChannel string Channel Name
@@ -820,13 +816,13 @@ class Mage_Connect_Packager
                      * @var $pMax string Maximum version number
                      * @var $pMin string Minimum version number
                      */
-                    foreach ($flds as $key) {
-                        $varName = "p" . ucfirst($key);
+                    foreach($flds as $key) {
+                        $varName = "p".ucfirst($key);
                         $$varName = $row[$key];
                     }
                     $method = __FUNCTION__;
                     /**
-                     * When we are building dependencies tree we should base this calculations not on full key as
+                     * @todo When we are building dependencies tree we should base this calculations not on full key as
                      * on a unique value but check it by parts. First part which should be checked is EXTENSION_NAME
                      * also this part should be unique globally not per channel.
                      */
@@ -848,7 +844,7 @@ class Mage_Connect_Packager
                         }
 
                         $names = array("pMin","pMax","hasMin","hasMax");
-                        for ($i=0, $c=count($names); $i<$c; $i++) {
+                        for($i=0, $c=count($names); $i<$c; $i++) {
                             if(!isset($$names[$i])) {
                                 continue;
                             }
@@ -900,9 +896,8 @@ class Mage_Connect_Packager
             $_failed = array();
             return array('deps' => $deps, 'result' => $out, 'failed'=> $failed);
         }
-
-        return null;
     }
+
 
     /**
      * Process dependencies hash. Makes topological sorting and gives operation order list
@@ -916,7 +911,8 @@ class Mage_Connect_Packager
         $nodes = array();
         $graph = new Mage_Connect_Structures_Graph();
 
-        foreach ($depsHash as $key=>$data) {
+        foreach($depsHash as $key=>$data) {
+            $packages = $data['packages'];
             $node = new Mage_Connect_Structures_Node();
             $nodes[$key] =& $node;
             unset($data['packages']);
@@ -925,12 +921,12 @@ class Mage_Connect_Packager
             unset($node);
         }
 
-        if (count($nodes) > 1) {
-            foreach ($depsHash as $key=>$data) {
+        if(count($nodes) > 1) {
+            foreach($depsHash as $key=>$data) {
                 $packages = $data['packages'];
-                foreach ($packages as $pdata) {
+                foreach($packages as $pdata) {
                     $pName = $pdata['name'];
-                    if (isset($nodes[$key], $nodes[$pName])) {
+                    if(isset($nodes[$key], $nodes[$pName])) {
                         $nodes[$key]->connectTo($nodes[$pName]);
                     }
                 }
@@ -944,9 +940,8 @@ class Mage_Connect_Packager
         $result = $graph->topologicalSort();
         $sortReverse ? krsort($result) : ksort($result);
         $out = array();
-        foreach ($result as $nodes) {
-            foreach ($nodes as $n) {
-                /** @var $n Mage_Connect_Structures_Node */
+        foreach($result as $nodes) {
+            foreach($nodes as $n) {
                 $out[] = $n->getData();
             }
         }

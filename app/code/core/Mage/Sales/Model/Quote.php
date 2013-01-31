@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Sales
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -129,8 +129,6 @@
  * @method Mage_Sales_Model_Quote setExtShippingInfo(string $value)
  * @method int getGiftMessageId()
  * @method Mage_Sales_Model_Quote setGiftMessageId(int $value)
- * @method bool|null getIsPersistent()
- * @method Mage_Sales_Model_Quote setIsPersistent(bool $value)
  *
  * @category    Mage
  * @package     Mage_Sales
@@ -175,13 +173,6 @@ class Mage_Sales_Model_Quote extends Mage_Core_Model_Abstract
      * @var array
      */
     protected $_errorInfoGroups = array();
-
-    /**
-     * Whether quote should not be saved
-     *
-     * @var bool
-     */
-    protected $_preventSaving = false;
 
     /**
      * Init resource model
@@ -475,10 +466,9 @@ class Mage_Sales_Model_Quote extends Mage_Core_Model_Abstract
      */
     public function getCustomerGroupId()
     {
-        if ($this->hasData('customer_group_id')) {
-            return $this->getData('customer_group_id');
-        } else if ($this->getCustomerId()) {
-            return $this->getCustomer()->getGroupId();
+        if ($this->getCustomerId()) {
+            return ($this->getData('customer_group_id')) ? $this->getData('customer_group_id')
+                : $this->getCustomer()->getGroupId();
         } else {
             return Mage_Customer_Model_Group::NOT_LOGGED_IN_ID;
         }
@@ -488,7 +478,7 @@ class Mage_Sales_Model_Quote extends Mage_Core_Model_Abstract
     {
         /*
         * tax class can vary at any time. so instead of using the value from session,
-        * we need to retrieve from db every time to get the correct tax class
+        * we need to retrieve from db everytime to get the correct tax class
         */
         //if (!$this->getData('customer_group_id') && !$this->getData('customer_tax_class_id')) {
         $classId = Mage::getModel('customer/group')->getTaxClassId($this->getCustomerGroupId());
@@ -699,9 +689,6 @@ class Mage_Sales_Model_Quote extends Mage_Core_Model_Abstract
      */
     public function getItemsCollection($useCache = true)
     {
-        if ($this->hasItemsCollection()) {
-            return $this->getData('items_collection');
-        }
         if (is_null($this->_items)) {
             $this->_items = Mage::getModel('sales/quote_item')->getCollection();
             $this->_items->setQuote($this);
@@ -830,23 +817,6 @@ class Mage_Sales_Model_Quote extends Mage_Core_Model_Abstract
     }
 
     /**
-     * Mark all quote items as deleted (empty quote)
-     *
-     * @return Mage_Sales_Model_Quote
-     */
-    public function removeAllItems()
-    {
-        foreach ($this->getItemsCollection() as $itemId => $item) {
-            if (is_null($item->getId())) {
-                $this->getItemsCollection()->removeItemByKey($itemId);
-            } else {
-                $item->isDeleted(true);
-            }
-        }
-        return $this;
-    }
-
-    /**
      * Adding new item to quote
      *
      * @param   Mage_Sales_Model_Quote_Item $item
@@ -933,7 +903,7 @@ class Mage_Sales_Model_Quote extends Mage_Core_Model_Abstract
             if (!$parentItem) {
                 $parentItem = $item;
             }
-            if ($parentItem && $candidate->getParentProductId()) {
+            if ($parentItem && $candidate->getParentProductId() && !$item->getId()) {
                 $item->setParentItem($parentItem);
             }
 
@@ -944,10 +914,7 @@ class Mage_Sales_Model_Quote extends Mage_Core_Model_Abstract
 
             // collect errors instead of throwing first one
             if ($item->getHasError()) {
-                $message = $item->getMessage();
-                if (!in_array($message, $errors)) { // filter duplicate messages
-                    $errors[] = $message;
-                }
+                $errors[] = $item->getMessage();
             }
         }
         if (!empty($errors)) {
@@ -1242,7 +1209,12 @@ class Mage_Sales_Model_Quote extends Mage_Core_Model_Abstract
         if ($this->getTotalsCollectedFlag()) {
             return $this;
         }
-        Mage::dispatchEvent($this->_eventPrefix . '_collect_totals_before', array($this->_eventObject => $this));
+        Mage::dispatchEvent(
+            $this->_eventPrefix . '_collect_totals_before',
+            array(
+                 $this->_eventObject=>$this
+            )
+        );
 
         $this->setSubtotal(0);
         $this->setBaseSubtotal(0);
@@ -1307,7 +1279,10 @@ class Mage_Sales_Model_Quote extends Mage_Core_Model_Abstract
         $this->setData('trigger_recollect', 0);
         $this->_validateCouponCode();
 
-        Mage::dispatchEvent($this->_eventPrefix . '_collect_totals_after', array($this->_eventObject => $this));
+        Mage::dispatchEvent(
+            $this->_eventPrefix . '_collect_totals_after',
+            array($this->_eventObject => $this)
+        );
 
         $this->setTotalsCollectedFlag(true);
         return $this;
@@ -1375,11 +1350,6 @@ class Mage_Sales_Model_Quote extends Mage_Core_Model_Abstract
         return $this;
     }
 
-    /**
-     * Retrieve current quote messages
-     *
-     * @return array
-     */
     public function getMessages()
     {
         $messages = $this->getData('messages');
@@ -1388,23 +1358,6 @@ class Mage_Sales_Model_Quote extends Mage_Core_Model_Abstract
             $this->setData('messages', $messages);
         }
         return $messages;
-    }
-
-    /**
-     * Retrieve current quote errors
-     *
-     * @return array
-     */
-    public function getErrors()
-    {
-        $errors = array();
-        foreach ($this->getMessages() as $message) {
-            /* @var $error Mage_Core_Model_Message_Abstract */
-            if ($message->getType() == Mage_Core_Model_Message::ERROR) {
-                array_push($errors, $message);
-            }
-        }
-        return $errors;
     }
 
     /**
@@ -1810,7 +1763,7 @@ class Mage_Sales_Model_Quote extends Mage_Core_Model_Abstract
     protected function _validateCouponCode()
     {
         $code = $this->_getData('coupon_code');
-        if (strlen($code)) {
+        if ($code) {
             $addressHasCoupon = false;
             $addresses = $this->getAllAddresses();
             if (count($addresses)>0) {
@@ -1872,29 +1825,5 @@ class Mage_Sales_Model_Quote extends Mage_Core_Model_Abstract
     public function isAllowedGuestCheckout()
     {
         return Mage::helper('checkout')->isAllowedGuestCheckout($this, $this->getStoreId());
-    }
-
-    /**
-     * Prevent quote from saving
-     *
-     * @return Mage_Sales_Model_Quote
-     */
-    public function preventSaving()
-    {
-        $this->_preventSaving = true;
-        return $this;
-    }
-
-    /**
-     * Save quote with prevention checking
-     *
-     * @return Mage_Sales_Model_Quote
-     */
-    public function save()
-    {
-        if ($this->_preventSaving) {
-            return $this;
-        }
-        return parent::save();
     }
 }

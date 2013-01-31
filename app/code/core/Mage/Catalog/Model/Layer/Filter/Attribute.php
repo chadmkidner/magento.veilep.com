@@ -20,7 +20,7 @@
  *
  * @category    Mage
  * @package     Mage_Catalog
- * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @copyright   Copyright (c) 2011 Magento Inc. (http://www.magentocommerce.com)
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
@@ -69,7 +69,7 @@ class Mage_Catalog_Model_Layer_Filter_Attribute extends Mage_Catalog_Model_Layer
      * Get option text from frontend model by option id
      *
      * @param   int $optionId
-     * @return  string|bool
+     * @return  unknown
      */
     protected function _getOptionText($optionId)
     {
@@ -90,7 +90,7 @@ class Mage_Catalog_Model_Layer_Filter_Attribute extends Mage_Catalog_Model_Layer
             return $this;
         }
         $text = $this->_getOptionText($filter);
-        if ($filter && strlen($text)) {
+        if ($filter && $text) {
             $this->_getResource()->applyFilterToCollection($this, $filter);
             $this->getLayer()->getState()->addFilter($this->_createItem($text, $filter));
             $this->_items = array();
@@ -126,6 +126,7 @@ class Mage_Catalog_Model_Layer_Filter_Attribute extends Mage_Catalog_Model_Layer
             $options = $attribute->getFrontend()->getSelectOptions();
             $optionsCount = $this->_getResource()->getCount($this);
             $data = array();
+
             foreach ($options as $option) {
                 if (is_array($option['value'])) {
                     continue;
